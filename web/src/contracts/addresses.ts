@@ -1,0 +1,58 @@
+import { defineChain } from 'viem';
+
+export const ADDRESSES = {
+  unichainSepolia: {
+    thaHtayHook:        '0xb251e8bBcd2C0d70869B728e58AE526622bD30C0' as `0x${string}`,
+    positionManager:    '0x63618FBdF54CbC40b3402bc777C8A5F915a9895E' as `0x${string}`,
+    fundingRateManager: '0xE32911cd336b1b96d332790a9De1319175D96FF2' as `0x${string}`,
+    liquidationEngine:  '0x9A199f4CE8D229AA89AbB2a9FD6396B280c37791' as `0x${string}`,
+    usdc:               '0x31d0220469e10c4E71834a79b1f276d740d3768F' as `0x${string}`,
+    poolManager:        '0x00B036B58a818B1BC34d502D3fE730Db729e62AC' as `0x${string}`,
+  },
+  unichainMainnet: {
+    thaHtayHook:        '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    positionManager:    '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    fundingRateManager: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    liquidationEngine:  '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    usdc:               '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    poolManager:        '0x0000000000000000000000000000000000000000' as `0x${string}`,
+  },
+} as const;
+
+export const unichainSepolia = defineChain({
+  id: 1301,
+  name: 'Unichain Sepolia',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://sepolia.unichain.org'] },
+    public:  { http: ['https://sepolia.unichain.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Uniscan', url: 'https://sepolia.uniscan.xyz' },
+  },
+  testnet: true,
+});
+
+export const unichainMainnet = defineChain({
+  id: 130,
+  name: 'Unichain',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://mainnet.unichain.org'] },
+    public:  { http: ['https://mainnet.unichain.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Uniscan', url: 'https://uniscan.xyz' },
+  },
+});
+
+export const SUPPORTED_CHAINS = [unichainSepolia, unichainMainnet] as const;
+export const DEFAULT_CHAIN = unichainSepolia;
+
+export type SupportedChainId = (typeof SUPPORTED_CHAINS)[number]['id'];
+
+export function getAddresses(chainId: SupportedChainId) {
+  if (chainId === 1301) return ADDRESSES.unichainSepolia;
+  if (chainId === 130)  return ADDRESSES.unichainMainnet;
+  return ADDRESSES.unichainSepolia;
+}

@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "ThaHtayHook",
+    "slug": "thahtay-hook",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0E13"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.thahtayhook.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Not used",
+        "NSLocationWhenInUseUsageDescription": "Not used"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0E13"
+      },
+      "package": "com.thahtayhook.app"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0E13",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "scheme": "thahtay",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,73 @@
+type Position @entity {
+  id: ID!                        # trader address
+  trader: Bytes!
+  isLong: Boolean!
+  size: BigInt!                  # 18 decimals
+  margin: BigInt!                # 18 decimals
+  entryPrice: BigInt!            # 18 decimals
+  leverage: BigInt!
+  liquidationPrice: BigInt!      # 18 decimals
+  referrer: Bytes
+  status: String!                # "open" | "closed" | "liquidated"
+  openedAt: BigInt!              # block timestamp
+  closedAt: BigInt
+  realizedPnl: BigInt            # signed, 18 decimals
+  exitPrice: BigInt              # 18 decimals
+  fundingPaid: BigInt            # 18 decimals
+  openTx: Bytes!
+  closeTx: Bytes
+}
+
+type Trade @entity {
+  id: ID!                        # txHash-logIndex
+  trader: Bytes!
+  type: String!                  # "open" | "close"
+  isLong: Boolean!
+  size: BigInt!
+  price: BigInt!
+  leverage: BigInt!
+  fee: BigInt
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+}
+
+type Liquidation @entity {
+  id: ID!                        # txHash-logIndex
+  trader: Bytes!
+  liquidator: Bytes!
+  liquidationPrice: BigInt!
+  bonus: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+}
+
+type FundingUpdate @entity {
+  id: ID!                        # epoch number
+  fundingRate: BigInt!           # signed, 1e18 scaled
+  longCumulativeIndex: BigInt!
+  shortCumulativeIndex: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type MarginEvent @entity {
+  id: ID!                        # txHash-logIndex
+  trader: Bytes!
+  type: String!                  # "add" | "remove"
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+}
+
+type ProtocolStat @entity {
+  id: ID!                        # "global"
+  totalVolumeUSD: BigInt!
+  totalPositionsOpened: BigInt!
+  totalPositionsClosed: BigInt!
+  totalLiquidations: BigInt!
+  totalFeesCollected: BigInt!
+  updatedAt: BigInt!
+}

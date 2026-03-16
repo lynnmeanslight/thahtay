@@ -1,0 +1,10 @@
+=== ThaHtayHook Deployment Summary ===
+  Network:             Unichain Sepolia
+  ThaHtayHook:         0xb251e8bBcd2C0d70869B728e58AE526622bD30C0
+  PositionManager:     0x63618FBdF54CbC40b3402bc777C8A5F915a9895E
+  FundingRateManager:  0xE32911cd336b1b96d332790a9De1319175D96FF2
+  LiquidationEngine:   0x9A199f4CE8D229AA89AbB2a9FD6396B280c37791
+  Treasury:            0x3766C6dDF41a590bB68FB925594Dc8b24663C765
+  USDC:                0x31d0220469e10c4E71834a79b1f276d740d3768F
+  PoolManager:         0x00B036B58a818B1BC34d502D3fE730Db729e62AC
+  =======================================

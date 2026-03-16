@@ -1,0 +1,18 @@
+export const colors = {
+  bg:          '#0B0E13',
+  surface:     '#131820',
+  bgInput:     '#1A2030',
+  bgHighlight: '#1E2738',
+  border:      '#232D3F',
+  borderLight: '#2A3650',
+  primary:     '#00D4A1',
+  profit:      '#00D4A1',
+  loss:        '#FF4D4D',
+  blue:        '#4D8AFF',
+  yellow:      '#FFB547',
+  textPrimary:   '#F0F4FF',
+  textSecondary: '#7A8BA8',
+  textMuted:     '#4A5568',
+  chartGrid:   '#1A2030',
+  chartLine:   '#4D8AFF',
+} as const;

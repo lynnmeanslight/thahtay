@@ -1,0 +1,42 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: ThaHtayHook
+    network: unichain-sepolia
+    source:
+      # Replace with actual deployed address after deployment
+      address: "0x0000000000000000000000000000000000000000"
+      abi: ThaHtayHook
+      # Block where ThaHtayHook was deployed
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Position
+        - Trade
+        - Liquidation
+        - FundingUpdate
+        - MarginEvent
+        - ProtocolStat
+      abis:
+        - name: ThaHtayHook
+          file: ./abis/ThaHtayHook.json
+      eventHandlers:
+        - event: PositionOpened(indexed address,indexed bool,uint256,uint256,uint256,uint256,uint256,address)
+          handler: handlePositionOpened
+        - event: PositionClosed(indexed address,uint256,int256,uint256)
+          handler: handlePositionClosed
+        - event: MarginAdded(indexed address,uint256)
+          handler: handleMarginAdded
+        - event: MarginRemoved(indexed address,uint256)
+          handler: handleMarginRemoved
+        - event: Liquidated(indexed address,indexed address,uint256,uint256)
+          handler: handleLiquidated
+        - event: FundingUpdated(int256,uint256,uint256)
+          handler: handleFundingUpdated
+      file: ./src/mapping.ts

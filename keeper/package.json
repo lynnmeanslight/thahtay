@@ -1,0 +1,15 @@
+{
+  "name": "thahtay-price-keeper",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Off-chain keeper that syncs the Uniswap v4 pool price with real ETH price",
+  "main": "keeper.js",
+  "scripts": {
+    "start": "node keeper.js",
+    "start:fast": "POLL_INTERVAL_MS=15000 node keeper.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "viem": "^2.17.0"
+  }
+}

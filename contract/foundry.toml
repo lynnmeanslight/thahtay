@@ -1,0 +1,29 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc_version = "0.8.26"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+ffi = true
+
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 15
+call_override = false
+
+[rpc_endpoints]
+unichain_sepolia = "${UNICHAIN_SEPOLIA_RPC}"
+unichain_mainnet = "${UNICHAIN_MAINNET_RPC}"
+localhost = "http://127.0.0.1:8545"
+
+[etherscan]
+unichain_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://sepolia.uniscan.xyz/api" }
+unichain_mainnet = { key = "${ETHERSCAN_API_KEY}", url = "https://uniscan.xyz/api" }
