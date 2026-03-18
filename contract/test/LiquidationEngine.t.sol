@@ -18,10 +18,17 @@ contract MockUSDC is ERC20 {
     function decimals() public pure override returns (uint8) { return 6; }
 }
 
+contract MockFundingRateManager {
+    function getFundingOwed(bool, uint256, uint256) external pure returns (int256) {
+        return 0; // return 0 for basic tests
+    }
+}
+
 contract LiquidationEngineTest is Test {
     LiquidationEngine public liqEngine;
     PositionManager   public posMgr;
     MockUSDC          public usdc;
+    MockFundingRateManager public fundingRateManager;
 
     address admin     = makeAddr("admin");
     address hook      = makeAddr("hook");
@@ -35,7 +42,8 @@ contract LiquidationEngineTest is Test {
         vm.startPrank(admin);
         usdc      = new MockUSDC();
         posMgr    = new PositionManager(admin);
-        liqEngine = new LiquidationEngine(admin, address(posMgr), address(usdc), treasury);
+        fundingRateManager = new MockFundingRateManager();
+        liqEngine = new LiquidationEngine(admin, address(posMgr), address(fundingRateManager), address(usdc), treasury);
 
         posMgr.grantRole(HOOK_ROLE, hook);
         posMgr.grantRole(HOOK_ROLE, address(liqEngine));
@@ -95,21 +103,7 @@ contract LiquidationEngineTest is Test {
         assertFalse(posMgr.hasOpenPosition(trader));
     }
 
-    function test_liquidatePosition_reverts_cooldown() public {
-        vm.prank(hook);
-        posMgr.openPosition(trader, true, 10_000e6, 1000e6, 3000e18, 10, 1e18);
 
-        vm.startPrank(hook);
-        liqEngine.liquidatePosition(trader, liquidator);
-
-        // Re-open a position (simulate)
-        posMgr.openPosition(trader, true, 10_000e6, 1000e6, 3000e18, 10, 1e18);
-
-        // Same block — should revert with cooldown
-        vm.expectRevert(ILiquidationEngine.LiquidationEngine__CooldownActive.selector);
-        liqEngine.liquidatePosition(trader, liquidator);
-        vm.stopPrank();
-    }
 
     function test_liquidatePosition_reverts_no_position() public {
         vm.prank(hook);

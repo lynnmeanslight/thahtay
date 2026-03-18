@@ -37,7 +37,9 @@ contract PriceKeeper is IUnlockCallback {
     // ─── Constants ────────────────────────────────────────────────────────
 
     /// @dev Minimum price drift to trigger a sync: 50 bps = 0.5%
-    uint256 public constant THRESHOLD_BPS = 50;
+    uint256 public thresholdBps = 50;
+    uint256 public maxStepBps = 200; // max 2% sqrt move per sync
+    uint256 public minSyncInterval = 10; // seconds
     uint256 public constant BPS_DENOMINATOR = 10_000;
 
     // ─── Immutables ───────────────────────────────────────────────────────
@@ -48,6 +50,7 @@ contract PriceKeeper is IUnlockCallback {
 
     PoolKey public poolKey;
     address public owner;
+    uint256 public lastSyncAt;
 
     // ─── Events ───────────────────────────────────────────────────────────
 
@@ -56,6 +59,7 @@ contract PriceKeeper is IUnlockCallback {
         uint160 indexed newSqrtPriceX96,
         bool zeroForOne
     );
+    event SyncConfigUpdated(uint256 thresholdBps, uint256 maxStepBps, uint256 minSyncInterval);
 
     // ─── Modifiers ────────────────────────────────────────────────────────
 
@@ -100,18 +104,21 @@ contract PriceKeeper is IUnlockCallback {
     function syncPrice(uint160 targetSqrtPriceX96) external onlyOwner {
         (uint160 current,,,) = poolManager.getSlot0(poolKey.toId());
         require(current != 0, "PriceKeeper: pool not initialised");
+        require(block.timestamp >= lastSyncAt + minSyncInterval, "PriceKeeper: cooldown");
+
+        uint160 clampedTarget = _clampTarget(current, targetSqrtPriceX96);
 
         // Reject if drift is too small (saves gas on noisy updates)
-        uint256 diff = current > targetSqrtPriceX96
-            ? uint256(current) - uint256(targetSqrtPriceX96)
-            : uint256(targetSqrtPriceX96) - uint256(current);
+        uint256 diff = current > clampedTarget
+            ? uint256(current) - uint256(clampedTarget)
+            : uint256(clampedTarget) - uint256(current);
         require(
-            diff * BPS_DENOMINATOR >= uint256(current) * THRESHOLD_BPS,
+            diff * BPS_DENOMINATOR >= uint256(current) * thresholdBps,
             "PriceKeeper: drift below threshold"
         );
 
         // Higher ETH price → lower sqrtPriceX96 → buy WETH (zeroForOne = true)
-        bool zeroForOne = targetSqrtPriceX96 < current;
+        bool zeroForOne = clampedTarget < current;
 
         // Pre-approve the PoolManager for whichever token we're selling
         address sellToken = zeroForOne
@@ -119,7 +126,21 @@ contract PriceKeeper is IUnlockCallback {
             : Currency.unwrap(poolKey.currency1);  // sell WETH
         IERC20(sellToken).approve(address(poolManager), type(uint256).max);
 
-        poolManager.unlock(abi.encode(current, zeroForOne, targetSqrtPriceX96));
+        lastSyncAt = block.timestamp;
+        poolManager.unlock(abi.encode(current, zeroForOne, clampedTarget));
+    }
+
+    /// @notice Update sync guardrails.
+    function setSyncConfig(uint256 _thresholdBps, uint256 _maxStepBps, uint256 _minSyncInterval) external onlyOwner {
+        require(_thresholdBps > 0 && _thresholdBps <= 1000, "PriceKeeper: bad threshold");
+        require(_maxStepBps > 0 && _maxStepBps <= 5000, "PriceKeeper: bad max step");
+        require(_minSyncInterval <= 3600, "PriceKeeper: bad interval");
+
+        thresholdBps = _thresholdBps;
+        maxStepBps = _maxStepBps;
+        minSyncInterval = _minSyncInterval;
+
+        emit SyncConfigUpdated(_thresholdBps, _maxStepBps, _minSyncInterval);
     }
 
     /// @inheritdoc IUnlockCallback
@@ -171,5 +192,20 @@ contract PriceKeeper is IUnlockCallback {
         } else if (delta > 0) {
             poolManager.take(currency, address(this), uint256(uint128(delta)));
         }
+    }
+
+    function _clampTarget(uint160 current, uint160 requested) internal view returns (uint160) {
+        uint256 maxDelta = (uint256(current) * maxStepBps) / BPS_DENOMINATOR;
+        if (maxDelta == 0) return requested;
+
+        if (requested > current) {
+            uint256 up = uint256(requested) - uint256(current);
+            if (up > maxDelta) return uint160(uint256(current) + maxDelta);
+            return requested;
+        }
+
+        uint256 down = uint256(current) - uint256(requested);
+        if (down > maxDelta) return uint160(uint256(current) - maxDelta);
+        return requested;
     }
 }

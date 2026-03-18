@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { calcLiquidationPrice, calcRequiredMargin, calcTradingFee } from '../utils/pnl';
+import { calcLiquidationPrice, calcTradingFee } from '../utils/pnl';
 import type { GqlPosition } from '../services/graphService';
 import { parseUsdcToInternal } from '../utils/formatting';
 
@@ -28,9 +28,10 @@ export function usePositionPreview(
   liquidationPrice: bigint;
 } {
   return useMemo(() => {
-    const sizeInternal = parseUsdcToInternal(sizeInput);
+    const marginInternal = parseUsdcToInternal(sizeInput);
+    const leverageInt = Math.max(1, Math.min(10, Math.round(leverage)));
 
-    if (sizeInternal === 0n || leverage === 0 || currentPrice === 0n) {
+    if (marginInternal === 0n || leverageInt === 0 || currentPrice === 0n) {
       return {
         sizeInternal: 0n,
         requiredMargin: 0n,
@@ -40,7 +41,8 @@ export function usePositionPreview(
       };
     }
 
-    const requiredMargin = calcRequiredMargin(sizeInternal, leverage);
+    const sizeInternal = marginInternal * BigInt(leverageInt);
+    const requiredMargin = marginInternal;
     const tradingFee     = calcTradingFee(sizeInternal);
     const totalRequired  = requiredMargin + tradingFee;
     const liquidationPrice = calcLiquidationPrice(isLong, sizeInternal, requiredMargin, currentPrice);

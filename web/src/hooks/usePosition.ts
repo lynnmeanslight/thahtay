@@ -1,6 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
+import { readContract } from '@wagmi/core';
+import { useChainId } from 'wagmi';
 import { fetchPosition } from '../services/graphService';
 import type { GqlPosition } from '../services/graphService';
+import { wagmiConfig } from '../providers/config';
+import { POSITION_MANAGER_ABI } from '../contracts/abis';
+import { getAddresses } from '../contracts/addresses';
+
+type OnChainPosition = {
+  trader: `0x${string}`;
+  isLong: boolean;
+  size: bigint;
+  margin: bigint;
+  entryPrice: bigint;
+  leverage: bigint;
+  lastFundingIndex: bigint;
+  openedAt: bigint;
+};
 
 export function usePosition(trader: string | undefined): {
   position: GqlPosition | null;
@@ -8,9 +24,57 @@ export function usePosition(trader: string | undefined): {
   error: Error | null;
   refetch: () => void;
 } {
+  const chainId = useChainId();
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['position', trader],
-    queryFn: () => fetchPosition(trader!),
+    queryKey: ['position', trader, chainId],
+    queryFn: async () => {
+      const address = trader! as `0x${string}`;
+
+      // Primary: subgraph (fast historical/indexed reads)
+      try {
+        const indexed = await fetchPosition(address);
+        if (indexed) return indexed;
+      } catch {
+        // Fallback below keeps the page usable when subgraph URL/indexing is broken.
+      }
+
+      // Fallback: direct on-chain position read
+      const addresses = getAddresses(chainId as 1301 | 130);
+      const hasOpen = await readContract(wagmiConfig, {
+        address: addresses.positionManager,
+        abi: POSITION_MANAGER_ABI,
+        functionName: 'hasOpenPosition',
+        args: [address],
+      }) as boolean;
+
+      if (!hasOpen) return null;
+
+      const pos = await readContract(wagmiConfig, {
+        address: addresses.positionManager,
+        abi: POSITION_MANAGER_ABI,
+        functionName: 'getPosition',
+        args: [address],
+      }) as unknown as OnChainPosition;
+
+      return {
+        id: address.toLowerCase(),
+        trader: pos.trader,
+        isLong: pos.isLong,
+        size: pos.size.toString(),
+        margin: pos.margin.toString(),
+        entryPrice: pos.entryPrice.toString(),
+        leverage: pos.leverage.toString(),
+        liquidationPrice: '0',
+        status: 'open',
+        openedAt: pos.openedAt.toString(),
+        closedAt: null,
+        realizedPnl: null,
+        exitPrice: null,
+        fundingPaid: null,
+        referrer: null,
+      };
+    },
     enabled: !!trader,
     refetchInterval: 3000,
     staleTime: 1000,

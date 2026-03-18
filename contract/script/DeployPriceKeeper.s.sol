@@ -10,7 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 ///
 /// Usage:
 ///   forge script script/DeployPriceKeeper.s.sol:DeployPriceKeeperScript \
-///     --rpc-url https://sepolia.unichain.org \
+///     --rpc-url https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo \
 ///     --private-key $PRIVATE_KEY \
 ///     --broadcast
 ///
@@ -18,7 +18,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract DeployPriceKeeperScript is Script {
     // ── Unichain Sepolia deployed addresses ───────────────────────────────
     address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
-    address constant HOOK         = 0xb251e8bBcd2C0d70869B728e58AE526622bD30C0;
+    address constant HOOK         = 0x2766aD7defB0C9F68325C2A25BA96aBb844Cf0c0;
 
     // USDC (0x31d0..) < WETH (0x4200..) by address value → USDC = currency0
     address constant USDC = 0x31d0220469e10c4E71834a79b1f276d740d3768F;

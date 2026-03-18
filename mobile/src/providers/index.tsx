@@ -11,7 +11,7 @@ export const unichainSepolia = defineChain({
   name: 'Unichain Sepolia',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://sepolia.unichain.org'] },
+    default: { http: ['https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'] },
   },
   blockExplorers: {
     default: { name: 'Uniscan', url: 'https://sepolia.uniscan.xyz' },
@@ -38,7 +38,7 @@ export const wagmiConfig = createConfig({
     injected(), // MetaMask mobile browser
   ],
   transports: {
-    [unichainSepolia.id]: http('https://sepolia.unichain.org'),
+    [unichainSepolia.id]: http('https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'),
     [unichainMainnet.id]: http('https://mainnet.unichain.org'),
   },
 });

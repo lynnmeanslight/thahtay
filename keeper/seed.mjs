@@ -5,7 +5,7 @@ const chain = defineChain({
   id: 1301,
   name: 'Unichain Sepolia',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: { default: { http: ['https://sepolia.unichain.org'] } },
+  rpcUrls: { default: { http: ['https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'] } },
 });
 
 const DEPLOYER = '0x3766C6dDF41a590bB68FB925594Dc8b24663C765';
@@ -16,7 +16,7 @@ const wallet  = createWalletClient({ account, chain, transport: http() });
 const pub     = createPublicClient({ chain, transport: http() });
 
 const USDC    = '0x31d0220469e10c4E71834a79b1f276d740d3768F';
-const KEEPER  = '0xb6d76596c7D6140911c8454E1d57302796776Fc7';
+const KEEPER  = '0x6728a21f9e97A5E3DeC914f832f0a21f45828d7c';
 const ERC20   = parseAbi([
   'function balanceOf(address) view returns (uint256)',
   'function transfer(address,uint256) returns (bool)',

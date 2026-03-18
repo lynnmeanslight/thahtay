@@ -65,11 +65,12 @@ export function useTrade() {
       await ensureApproval(totalUsdcRequired);
       // Contract expects size in USDC 6-decimal units; sizeInternal is 18-decimal internal.
       const sizeUsdc = sizeInternal / BigInt(10 ** 12);
+      const leverageInt = Math.max(1, Math.min(10, Math.round(leverage)));
       const txHash = await writeContractAsync({
         address: addresses.thaHtayHook,
         abi: THAHTAYHOOK_ABI,
         functionName: 'openPosition',
-        args: [isLong, sizeUsdc, BigInt(leverage), referrer],
+        args: [isLong, sizeUsdc, BigInt(leverageInt), referrer],
       });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['position', address] });

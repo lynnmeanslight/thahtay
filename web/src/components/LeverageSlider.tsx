@@ -22,7 +22,7 @@ export function LeverageSlider({ value, onChange, min = 1, max = 10 }: LeverageS
         type="range"
         min={min}
         max={max}
-        step={0.5}
+        step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ width: '100%', cursor: 'pointer' }}

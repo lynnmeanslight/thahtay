@@ -40,7 +40,7 @@ export function TradePage() {
       return;
     }
     if (sizeInternal === 0n) {
-      setError('Enter a position size');
+      setError('Enter collateral amount');
       return;
     }
     try {
@@ -132,7 +132,7 @@ export function TradePage() {
           value={sizeInput}
           onChangeText={setSizeInput}
           usdcBalance={usdcBalance}
-          label="Position Size"
+          label="Collateral (USDC)"
           error={error || undefined}
         />
 
@@ -152,6 +152,7 @@ export function TradePage() {
             }}
           >
             <SummaryRow label="Required Margin" value={formatUSD(internalToUsdc(requiredMargin), 6)} />
+            <SummaryRow label="Position Notional" value={formatUSD(internalToUsdc(sizeInternal), 6)} />
             <SummaryRow label="Trading Fee (0.1%)" value={formatUSD(internalToUsdc(tradingFee), 6)} />
             <SummaryRow
               label="Liq. Price"

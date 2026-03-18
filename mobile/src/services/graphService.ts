@@ -1,7 +1,7 @@
 // ─── GraphQL queries for The Graph / Goldsky ──────────────────────────────────
 
 const SUBGRAPH_URL =
-  process.env['EXPO_PUBLIC_SUBGRAPH_URL'] ?? 'https://api.goldsky.com/api/public/TODO';
+  process.env['EXPO_PUBLIC_SUBGRAPH_URL'] ?? 'https://api.goldsky.com/api/public/project_cmmhgxyrkhhn501w826759k1v/subgraphs/thahtay-hook/1.0.0/gn';
 
 async function gql<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
   const res = await fetch(SUBGRAPH_URL, {

@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '.env') });
 
-const RPC_URL = process.env.RPC_URL ?? 'https://sepolia.unichain.org';
+const RPC_URL = process.env.RPC_URL ?? 'https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo';
 const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;
 const STATE_VIEW_ADDRESS = process.env.STATE_VIEW_ADDRESS;
 const TICK_WORD_RADIUS = Number(process.env.TICK_WORD_RADIUS ?? 2);

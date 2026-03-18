@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {ILiquidationEngine} from "./interfaces/ILiquidationEngine.sol";
 import {IPositionManager} from "./interfaces/IPositionManager.sol";
+import {IFundingRateManager} from "./interfaces/IFundingRateManager.sol";
 import {Position, PositionLib} from "./libraries/PositionLib.sol";
 
 /// @title LiquidationEngine
@@ -37,22 +38,21 @@ contract LiquidationEngine is ILiquidationEngine, ReentrancyGuard, AccessControl
 
     // ─── Immutables ──────────────────────────────────────────────────────
     IPositionManager public immutable positionManager;
+    IFundingRateManager public immutable fundingRateManager;
     IERC20 public immutable usdc;
     address public immutable treasury;
-
-    // ─── State ───────────────────────────────────────────────────────────
-    /// @notice Last block number a liquidation was attempted for each trader.
-    mapping(address => uint256) public lastLiquidationBlock;
 
     // ─── Constructor ─────────────────────────────────────────────────────
     constructor(
         address admin,
         address _positionManager,
+        address _fundingRateManager,
         address _usdc,
         address _treasury
     ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         positionManager = IPositionManager(_positionManager);
+        fundingRateManager = IFundingRateManager(_fundingRateManager);
         usdc = IERC20(_usdc);
         treasury = _treasury;
     }
@@ -72,6 +72,17 @@ contract LiquidationEngine is ILiquidationEngine, ReentrancyGuard, AccessControl
     ) external view override returns (bool) {
         if (!positionManager.hasOpenPosition(trader)) return false;
         Position memory pos = positionManager.getPosition(trader);
+        
+        int256 fundingOwed = fundingRateManager.getFundingOwed(
+            pos.isLong,
+            pos.size,
+            pos.lastFundingIndex
+        );
+        
+        int256 nominalMargin = int256(pos.margin) - fundingOwed;
+        if (nominalMargin <= 0) return true;
+        
+        pos.margin = uint256(nominalMargin);
         return pos.isLiquidatable(currentPrice);
     }
 
@@ -80,11 +91,6 @@ contract LiquidationEngine is ILiquidationEngine, ReentrancyGuard, AccessControl
         address trader,
         address liquidator
     ) external override onlyHook nonReentrant {
-        // ─── Cooldown Check ───────────────────────────────────────────
-        if (lastLiquidationBlock[trader] == block.number) {
-            revert LiquidationEngine__CooldownActive();
-        }
-
         if (!positionManager.hasOpenPosition(trader)) {
             revert LiquidationEngine__NoOpenPosition();
         }
@@ -99,20 +105,21 @@ contract LiquidationEngine is ILiquidationEngine, ReentrancyGuard, AccessControl
         // The *actual* current price is embedded in effectiveMargin via the hook.
         // For this contract to be self-contained, we accept the hook's authority.
 
-        // Derive the effective margin at the time of liquidation.
-        // Since we can't re-read slot0 here, we use the position's recorded margin.
-        // The hook is responsible for verifying liquidatability before calling.
-        uint256 remainingMargin = pos.margin;
+        int256 fundingOwed = fundingRateManager.getFundingOwed(
+            pos.isLong,
+            pos.size,
+            pos.lastFundingIndex
+        );
 
+        int256 nominalMargin = int256(pos.margin) - fundingOwed;
+        uint256 remainingMargin = nominalMargin > 0 ? uint256(nominalMargin) : 0;
+        
         // Liquidation bonus = 5% of remaining margin.
         uint256 bonus = (remainingMargin * LIQUIDATION_BONUS_BPS) / BPS_DENOMINATOR;
         // Cap bonus at remaining margin
         if (bonus > remainingMargin) bonus = remainingMargin;
 
         uint256 toTreasury = remainingMargin - bonus;
-
-        // Record liquidation block before external calls (CEI pattern)
-        lastLiquidationBlock[trader] = block.number;
 
         // Close the position in PositionManager (hook granted us the HOOK_ROLE)
         positionManager.closePosition(trader);

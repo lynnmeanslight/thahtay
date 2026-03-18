@@ -7,11 +7,10 @@ dataSources:
     name: ThaHtayHook
     network: unichain-sepolia
     source:
-      # Replace with actual deployed address after deployment
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x2766aD7defB0C9F68325C2A25BA96aBb844Cf0c0"
       abi: ThaHtayHook
-      # Block where ThaHtayHook was deployed
-      startBlock: 0
+      # ThaHtayHook deployment block on Unichain Sepolia
+      startBlock: 46104544
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

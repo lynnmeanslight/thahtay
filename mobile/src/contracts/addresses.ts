@@ -4,10 +4,10 @@
 export const ADDRESSES = {
   // Unichain Sepolia (chainId: 1301)
   unichainSepolia: {
-    thaHtayHook:        '0xb251e8bBcd2C0d70869B728e58AE526622bD30C0' as `0x${string}`,
-    positionManager:    '0x63618FBdF54CbC40b3402bc777C8A5F915a9895E' as `0x${string}`,
-    fundingRateManager: '0xE32911cd336b1b96d332790a9De1319175D96FF2' as `0x${string}`,
-    liquidationEngine:  '0x9A199f4CE8D229AA89AbB2a9FD6396B280c37791' as `0x${string}`,
+    thaHtayHook:        '0xeb5851c6014C5a5F5A062C1331826b0789C3F0C0' as `0x${string}`,
+    positionManager:    '0x2071faEe2ee61fb5a295BF03a1D51f26D2F9FaBD' as `0x${string}`,
+    fundingRateManager: '0x723Bb79a7951415563129eE3583e573432aD6Fda' as `0x${string}`,
+    liquidationEngine:  '0x4503A9d28Dc625676e327184Ea76c654Dd657419' as `0x${string}`,
     usdc:               '0x31d0220469e10c4E71834a79b1f276d740d3768F' as `0x${string}`,
     poolManager:        '0x00B036B58a818B1BC34d502D3fE730Db729e62AC' as `0x${string}`,
   },
@@ -30,8 +30,8 @@ export const unichainSepolia = defineChain({
   name: 'Unichain Sepolia',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://sepolia.unichain.org'] },
-    public:  { http: ['https://sepolia.unichain.org'] },
+    default: { http: ['https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'] },
+    public:  { http: ['https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'] },
   },
   blockExplorers: {
     default: { name: 'Uniscan', url: 'https://sepolia.uniscan.xyz' },

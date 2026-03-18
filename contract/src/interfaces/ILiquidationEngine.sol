@@ -6,7 +6,6 @@ interface ILiquidationEngine {
     error LiquidationEngine__NotHook();
     error LiquidationEngine__PositionNotLiquidatable();
     error LiquidationEngine__NoOpenPosition();
-    error LiquidationEngine__CooldownActive();
 
     // ─── Events ───────────────────────────────────────────────────────────
     event Liquidated(

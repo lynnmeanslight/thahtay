@@ -60,6 +60,7 @@ contract DeployScript is Script {
         LiquidationEngine liqEngine = new LiquidationEngine(
             deployer,
             address(posMgr),
+            address(fundMgr),
             usdc,
             treasury
         );

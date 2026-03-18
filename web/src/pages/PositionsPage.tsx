@@ -5,7 +5,7 @@ import { colors } from '../theme/colors';
 
 export function PositionsPage() {
   const { address } = useAccount();
-  const { position, isLoading, refetch } = usePosition(address);
+  const { position, isLoading, error, refetch } = usePosition(address);
 
   if (!address) {
     return (
@@ -41,6 +41,21 @@ export function PositionsPage() {
 
       {isLoading && !position && (
         <span style={{ color: colors.textSecondary, fontSize: 13 }}>Loading...</span>
+      )}
+
+      {error && (
+        <div
+          style={{
+            background: colors.bgHighlight,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 10,
+            padding: '10px 12px',
+            color: colors.loss,
+            fontSize: 12,
+          }}
+        >
+          Failed to load indexed position data. Falling back to on-chain reads when available.
+        </div>
       )}
 
       {!isLoading && !position && (

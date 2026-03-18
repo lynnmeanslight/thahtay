@@ -33,7 +33,7 @@ const unichainSepolia = defineChain({
   name: 'Unichain Sepolia',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: [process.env.RPC_URL ?? 'https://sepolia.unichain.org'] },
+    default: { http: [process.env.RPC_URL ?? 'https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo'] },
   },
 });
 
@@ -41,7 +41,7 @@ const unichainSepolia = defineChain({
 
 const PRIVATE_KEY          = process.env.PRIVATE_KEY;             // 0x-prefixed
 const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;    // deployed PriceKeeper
-const HOOK_ADDRESS         = process.env.HOOK_ADDRESS ?? '0xb251e8bBcd2C0d70869B728e58AE526622bD30C0';
+const HOOK_ADDRESS         = process.env.HOOK_ADDRESS ?? '0xeb5851c6014C5a5F5A062C1331826b0789C3F0C0';
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS ?? 60_000); // 1 min default
 // This must match PriceKeeper.THRESHOLD_BPS in sqrtPrice space.
 // THRESHOLD_BPS=50 => sqrt drift 0.5%, which is roughly ~1% ETH price drift.
@@ -58,6 +58,8 @@ const KEEPER_ABI = parseAbi([
 
 const HOOK_ABI = parseAbi([
   'function getSpotPrice() external view returns (uint256)',
+  'function setIndexPrice(uint256 newIndexPrice) external',
+  'function triggerFundingUpdate() external',
 ]);
 
 // ── Clients ───────────────────────────────────────────────────────────────────
@@ -123,6 +125,12 @@ function priceToSqrtPriceX96(ethPriceUsd) {
   return numerator / denomBig;
 }
 
+// Hook price orientation currently uses inverse ETH price in 1e18 precision.
+function realPriceToHookIndexPrice(ethPriceUsd) {
+  if (!Number.isFinite(ethPriceUsd) || ethPriceUsd <= 0) return 0n;
+  return BigInt(Math.round(1e18 / ethPriceUsd));
+}
+
 /**
  * Read the pool's current effective ETH price via ThaHtayHook.getSpotPrice().
  */
@@ -145,6 +153,33 @@ async function tick() {
       fetchRealPrice(),
       readPoolPrice(),
     ]);
+
+    const hookIndexPrice = realPriceToHookIndexPrice(realPrice);
+    if (hookIndexPrice > 0n) {
+      try {
+        const setIndexHash = await walletClient.writeContract({
+          address: HOOK_ADDRESS,
+          abi: HOOK_ABI,
+          functionName: 'setIndexPrice',
+          args: [hookIndexPrice],
+        });
+        await publicClient.waitForTransactionReceipt({ hash: setIndexHash });
+      } catch (e) {
+        console.warn(`  ↳ setIndexPrice failed: ${e?.shortMessage ?? e?.message ?? e}`);
+      }
+
+      try {
+        const fundingHash = await walletClient.writeContract({
+          address: HOOK_ADDRESS,
+          abi: HOOK_ABI,
+          functionName: 'triggerFundingUpdate',
+          args: [],
+        });
+        await publicClient.waitForTransactionReceipt({ hash: fundingHash });
+      } catch (e) {
+        console.warn(`  ↳ triggerFundingUpdate failed: ${e?.shortMessage ?? e?.message ?? e}`);
+      }
+    }
 
     if (poolPrice === null) {
       console.log(`[${timestamp}] pool price unavailable, skipping`);

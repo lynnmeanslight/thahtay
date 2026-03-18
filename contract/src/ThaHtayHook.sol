@@ -24,6 +24,17 @@ import {ILiquidationEngine} from "./interfaces/ILiquidationEngine.sol";
 import {Position, PositionLib} from "./libraries/PositionLib.sol";
 import {PriceLib} from "./libraries/PriceLib.sol";
 
+interface IPyth {
+    struct Price {
+        int64 price;
+        uint64 conf;
+        int32 expo;
+        uint publishTime;
+    }
+
+    function getPriceNoOlderThan(bytes32 id, uint256 age) external view returns (Price memory);
+}
+
 /// @title ThaHtayHook
 /// @notice Uniswap v4 Hook that powers ThaHtayHook perpetual futures.
 ///
@@ -76,10 +87,23 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
     /// @notice Accumulated protocol fees (USDC, 6 decimals)
     uint256 public protocolFees;
 
+    /// @notice Free collateral balance (USDC, 6 decimals) held in protocol vault.
+    mapping(address => uint256) public collateralBalance;
+
     /// @notice At-risk traders watched for liquidation (capped list for gas)
     address[] public watchlist;
     mapping(address => bool) private _onWatchlist;
     uint256 public constant WATCHLIST_MAX = 50;
+
+    /// @notice External index price (same units as getSpotPrice), updated by keeper.
+    uint256 public indexPrice;
+    uint256 public indexPriceUpdatedAt;
+    uint256 public constant INDEX_PRICE_MAX_AGE = 15 minutes;
+
+    /// @notice Optional Pyth oracle config for index price reference.
+    address public pythOracle;
+    bytes32 public pythPriceId;
+    uint256 public pythMaxAge = 60;
 
     // ─── Events ───────────────────────────────────────────────────────────
     event PositionOpened(
@@ -100,6 +124,8 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
     );
     event MarginAdded(address indexed trader, uint256 amount);
     event MarginRemoved(address indexed trader, uint256 amount);
+    event CollateralDeposited(address indexed trader, uint256 amount);
+    event CollateralWithdrawn(address indexed trader, uint256 amount);
     event Liquidated(
         address indexed trader,
         address indexed liquidator,
@@ -111,6 +137,8 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         uint256 longCumulativeIndex,
         uint256 shortCumulativeIndex
     );
+    event IndexPriceUpdated(uint256 indexPrice, uint256 timestamp);
+    event PythConfigUpdated(address oracle, bytes32 priceId, uint256 maxAge);
     event ReferralSet(address indexed trader, address indexed referrer);
     event FeesWithdrawn(address indexed to, uint256 amount);
 
@@ -174,16 +202,20 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
     ) internal override returns (bytes4) {
         // Log the initial price for reference
         uint256 initPrice = PriceLib.sqrtPriceX96ToEthUsdcPrice(sqrtPriceX96);
+        indexPrice = initPrice;
+        indexPriceUpdatedAt = block.timestamp;
         emit FundingUpdated(0, initPrice, initPrice);
+        emit IndexPriceUpdated(initPrice, block.timestamp);
         return IHooks.afterInitialize.selector;
     }
 
     function _beforeSwap(
-        address,
+        address sender,
         PoolKey calldata,
         SwapParams calldata,
         bytes calldata
-    ) internal pure override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) internal view override returns (bytes4, BeforeSwapDelta, uint24) {
+        require(hasRole(KEEPER_ROLE, sender), "ThaHtayHook: not keeper");
         return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
@@ -207,6 +239,27 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
     }
 
     // ─── Trader-Facing Functions ───────────────────────────────────────────
+
+    /// @notice Deposit collateral into the protocol vault.
+    /// @param amount USDC amount in token units (6 decimals)
+    function depositCollateral(uint256 amount) external nonReentrant {
+        require(amount > 0, "ThaHtayHook: amount=0");
+        usdc.safeTransferFrom(msg.sender, address(this), amount);
+        collateralBalance[msg.sender] += amount;
+        emit CollateralDeposited(msg.sender, amount);
+    }
+
+    /// @notice Withdraw free collateral from protocol vault.
+    /// @param amount USDC amount in token units (6 decimals)
+    function withdrawCollateral(uint256 amount) external nonReentrant {
+        require(amount > 0, "ThaHtayHook: amount=0");
+        address trader = msg.sender;
+        require(collateralBalance[trader] >= amount, "ThaHtayHook: insufficient collateral");
+
+        collateralBalance[trader] -= amount;
+        usdc.safeTransfer(trader, amount);
+        emit CollateralWithdrawn(trader, amount);
+    }
 
     /// @notice Open a perpetual position. Margin must be approved before calling.
     /// @param isLong    True = long (buy), false = short (sell)
@@ -233,8 +286,14 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         uint256 fee = (size * TRADING_FEE_BPS) / BPS_DENOMINATOR;
         uint256 totalRequired = margin + fee;
 
-        // Pull USDC from trader (margin + fee)
-        usdc.safeTransferFrom(trader, address(this), totalRequired);
+        // Consume internal collateral balance; pull top-up only if needed.
+        uint256 freeBal = collateralBalance[trader];
+        if (freeBal < totalRequired) {
+            uint256 deficit = totalRequired - freeBal;
+            usdc.safeTransferFrom(trader, address(this), deficit);
+            freeBal += deficit;
+        }
+        collateralBalance[trader] = freeBal - totalRequired;
 
         // Handle referral fee
         if (referrer != address(0) && referrer != trader) {
@@ -313,16 +372,12 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         positionManager.closePosition(trader);
         _removeFromWatchlist(trader);
 
-        // Settle USDC to trader
+        // Settle to free collateral balance; user withdraws via withdrawCollateral().
         int256 totalReturn = int256(pos.margin) + netPnl;
         if (totalReturn > 0) {
-            uint256 returnAmount = uint256(totalReturn);
-            // Cap at what the contract holds (solvency guard)
-            uint256 available = usdc.balanceOf(address(this)) - protocolFees;
-            if (returnAmount > available) returnAmount = available;
-            usdc.safeTransfer(trader, returnAmount);
+            collateralBalance[trader] += uint256(totalReturn);
         }
-        // If totalReturn <= 0, margin is consumed by losses — no transfer
+        // If totalReturn <= 0, margin is consumed by losses — no credit
 
         uint256 fundingPaidAbs = fundingOwed > 0 ? uint256(fundingOwed) : 0;
         emit PositionClosed(trader, exitPrice, netPnl, fundingPaidAbs);
@@ -335,7 +390,15 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         address trader = msg.sender;
         require(positionManager.hasOpenPosition(trader), "ThaHtayHook: no position");
 
-        usdc.safeTransferFrom(trader, address(this), amount);
+        // Consume internal collateral balance; pull top-up only if needed.
+        uint256 freeBal = collateralBalance[trader];
+        if (freeBal < amount) {
+            uint256 deficit = amount - freeBal;
+            usdc.safeTransferFrom(trader, address(this), deficit);
+            freeBal += deficit;
+        }
+        collateralBalance[trader] = freeBal - amount;
+
         positionManager.addMargin(trader, amount);
 
         emit MarginAdded(trader, amount);
@@ -353,12 +416,22 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
 
         // Ensure position remains above maintenance margin after removal
         uint256 currentPrice = _getSpotPrice(poolKey);
+        
+        int256 fundingOwed = fundingRateManager.getFundingOwed(
+            pos.isLong,
+            pos.size,
+            pos.lastFundingIndex
+        );
+
+        int256 nominalNewMargin = int256(newMargin) - fundingOwed;
+        require(nominalNewMargin > 0, "ThaHtayHook: under margin");
+        
         Position memory simulated = pos;
-        simulated.margin = newMargin;
+        simulated.margin = uint256(nominalNewMargin);
         require(!simulated.isLiquidatable(currentPrice), "ThaHtayHook: below maintenance");
 
         positionManager.removeMargin(trader, amount);
-        usdc.safeTransfer(trader, amount);
+        collateralBalance[trader] += amount;
 
         emit MarginRemoved(trader, amount);
     }
@@ -375,38 +448,46 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         );
 
         Position memory pos = positionManager.getPosition(trader);
-
-        // Transfer position's margin to LiquidationEngine for distribution
         uint256 margin = pos.margin;
-        // First close position to update state before fund transfer (CEI)
-        positionManager.closePosition(trader);
+
+        // we do not call positionManager.closePosition here because
+        // LiquidationEngine does it. Just remove from watchlist.
         _removeFromWatchlist(trader);
 
-        // Send margin to LiquidationEngine — it handles bonus + treasury split
+        // Send margin to LiquidationEngine — it handles bonus + treasury split + closePosition
         usdc.safeTransfer(address(liquidationEngine), margin);
 
         // Execute liquidation (LiquidationEngine will send bonus to msg.sender)
-        // We re-open a "synthetic" position in LiquidationEngine context.
-        // Since position is already closed, LiquidationEngine reads from its own state.
-        // Instead, distribute here directly (matches LiquidationEngine logic):
-        uint256 bonus = (margin * 500) / BPS_DENOMINATOR; // 5%
-        if (bonus > margin) bonus = margin;
-        uint256 toTreasury = margin - bonus;
+        liquidationEngine.liquidatePosition(trader, msg.sender);
 
-        if (bonus > 0) {
-            usdc.safeTransfer(msg.sender, bonus);
-        }
-        if (toTreasury > 0) {
-            usdc.safeTransfer(treasury, toTreasury);
-        }
-
-        emit Liquidated(trader, msg.sender, currentPrice, bonus);
+        // The liquidation engine emits its own event, but we can emit ours if we want or just remove it
+        // Or we just don't emit our own to avoid double events, but the interface might expect it
+        // Actually, LiquidationEngine emits Liquidated. We don't need a duplicate.
     }
 
     /// @notice Manually trigger funding update. Anyone can call.
     function triggerFundingUpdate() external {
         uint256 currentPrice = _getSpotPrice(poolKey);
         _tryUpdateFunding(currentPrice);
+    }
+
+    /// @notice Update external index price used by funding calculation.
+    /// @dev Price must use same units/orientation as getSpotPrice().
+    function setIndexPrice(uint256 newIndexPrice) external onlyRole(KEEPER_ROLE) {
+        require(newIndexPrice > 0, "ThaHtayHook: bad index price");
+        indexPrice = newIndexPrice;
+        indexPriceUpdatedAt = block.timestamp;
+        emit IndexPriceUpdated(newIndexPrice, block.timestamp);
+    }
+
+    /// @notice Configure Pyth oracle source for funding index reference.
+    /// @dev If configured and fresh, Pyth price is preferred over keeper-fed indexPrice.
+    function setPythConfig(address oracle, bytes32 priceId, uint256 maxAge) external onlyRole(ADMIN_ROLE) {
+        require(maxAge > 0 && maxAge <= 1 days, "ThaHtayHook: bad pyth age");
+        pythOracle = oracle;
+        pythPriceId = priceId;
+        pythMaxAge = maxAge;
+        emit PythConfigUpdated(oracle, priceId, maxAge);
     }
 
     // ─── Admin Functions ──────────────────────────────────────────────────
@@ -430,7 +511,11 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
     function _tryUpdateFunding(uint256 currentPrice) internal {
         // Only update if an interval has passed (FundingRateManager reverts otherwise)
         if (block.timestamp < fundingRateManager.lastFundingTime() + 1 hours) return;
-        try fundingRateManager.updateFunding(currentPrice, currentPrice) {
+
+        (uint256 resolvedIndexPrice, bool ok) = _resolveIndexPrice(currentPrice);
+        if (!ok) return;
+
+        try fundingRateManager.updateFunding(currentPrice, resolvedIndexPrice) {
             emit FundingUpdated(
                 fundingRateManager.currentFundingRate(),
                 fundingRateManager.longCumulativeIndex(),
@@ -439,12 +524,64 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
         } catch {}
     }
 
+    function _resolveIndexPrice(uint256 currentPrice) internal view returns (uint256 resolved, bool ok) {
+        // Prefer Pyth when configured and fresh.
+        (uint256 pythIndex, bool pythOk) = _getPythIndexPrice();
+        if (pythOk) {
+            return (pythIndex, true);
+        }
+
+        // Fallback: keeper-fed index price.
+        if (indexPrice > 0 && block.timestamp <= indexPriceUpdatedAt + INDEX_PRICE_MAX_AGE) {
+            return (indexPrice, true);
+        }
+
+        // Last resort: use current mark to avoid reverts (no-op funding differential).
+        if (currentPrice > 0) {
+            return (currentPrice, true);
+        }
+        return (0, false);
+    }
+
+    function _getPythIndexPrice() internal view returns (uint256, bool) {
+        if (pythOracle == address(0) || pythPriceId == bytes32(0)) return (0, false);
+
+        try IPyth(pythOracle).getPriceNoOlderThan(pythPriceId, pythMaxAge) returns (IPyth.Price memory p) {
+            if (p.price <= 0) return (0, false);
+
+            uint256 ethUsdE18 = _scalePriceTo1e18(uint64(p.price), p.expo);
+            if (ethUsdE18 == 0) return (0, false);
+
+            // Match current protocol spot-price orientation used across keeper/frontend.
+            // protocolPrice ~= 1e18 / ethUsd
+            return ((1e36) / ethUsdE18, true);
+        } catch {
+            return (0, false);
+        }
+    }
+
+    function _scalePriceTo1e18(uint256 rawPrice, int32 expo) internal pure returns (uint256) {
+        if (expo >= 0) {
+            uint32 pos = uint32(expo);
+            if (pos > 18) return 0;
+            return rawPrice * (10 ** pos) * 1e18;
+        }
+
+        uint32 neg = uint32(-expo);
+        if (neg > 77) return 0;
+        uint256 denom = 10 ** neg;
+        return (rawPrice * 1e18) / denom;
+    }
+
     function _scanLiquidations(uint256 currentPrice) internal {
         uint256 len = watchlist.length;
         if (len == 0) return;
         // Scan up to 5 positions per swap (gas limit safety)
         uint256 limit = len < 5 ? len : 5;
-        for (uint256 i = 0; i < limit; ) {
+        uint256 i = 0;
+        uint256 iterations = 0;
+
+        while (i < watchlist.length && iterations < limit) {
             address trader = watchlist[i];
             if (
                 positionManager.hasOpenPosition(trader) &&
@@ -453,24 +590,21 @@ contract ThaHtayHook is BaseHook, ReentrancyGuard, AccessControl {
                 // Auto-liquidate: bonus goes to block.coinbase (validator) for MEV alignment
                 Position memory pos = positionManager.getPosition(trader);
                 uint256 margin = pos.margin;
-                positionManager.closePosition(trader);
+
                 _removeFromWatchlist(trader);
 
-                uint256 bonus = (margin * 500) / BPS_DENOMINATOR;
-                if (bonus > margin) bonus = margin;
-                uint256 toTreasury = margin - bonus;
-
-                if (bonus > 0) {
-                    usdc.safeTransfer(block.coinbase, bonus);
+                usdc.safeTransfer(address(liquidationEngine), margin);
+                try liquidationEngine.liquidatePosition(trader, block.coinbase) {
+                    // Success, handled by liquidation engine
+                } catch {
+                    // If it reverts (e.g., cooldown), we swallow the error so we don't block the swap.
+                    // The trader is already removed from the watchlist for this block,
+                    // but they still have an open position. A keeper can manually liquidate them.
                 }
-                if (toTreasury > 0) {
-                    usdc.safeTransfer(treasury, toTreasury);
-                }
-
-                emit Liquidated(trader, block.coinbase, currentPrice, bonus);
             } else {
                 unchecked { ++i; }
             }
+            unchecked { ++iterations; }
         }
     }
 

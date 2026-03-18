@@ -101,8 +101,12 @@ export function calcTradingFee(size: bigint): bigint {
 
 /** Required margin = size / leverage */
 export function calcRequiredMargin(size: bigint, leverage: number): bigint {
-  if (leverage === 0) return size;
-  return size / BigInt(leverage);
+  if (!Number.isFinite(leverage) || leverage <= 0) return size;
+
+  const leverageInt = BigInt(Math.round(leverage));
+  if (leverageInt <= 0n) return size;
+
+  return size / leverageInt;
 }
 
 /** Total USDC required = margin + fee */
