@@ -46,6 +46,11 @@ contract DeployScript is Script {
         address treasury = vm.envOr("PROTOCOL_TREASURY", deployer);
         address poolMgr = vm.envOr("POOL_MANAGER_ADDRESS", POOL_MANAGER);
         address usdc = vm.envOr("USDC_ADDRESS", USDC);
+        address weth = vm.envOr("WETH_ADDRESS", WETH);
+
+        require(poolMgr.code.length > 0, "Deploy: POOL_MANAGER_ADDRESS has no code");
+        require(usdc.code.length > 0, "Deploy: USDC_ADDRESS has no code");
+        require(weth.code.length > 0, "Deploy: WETH_ADDRESS has no code");
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
@@ -128,8 +133,8 @@ contract DeployScript is Script {
 
         // ── 6. Initialize the Uniswap v4 pool ─────────────────────────────
         // Sort tokens: Uniswap v4 requires currency0 < currency1
-        address token0 = WETH < usdc ? WETH : usdc;
-        address token1 = WETH < usdc ? usdc : WETH;
+        address token0 = weth < usdc ? weth : usdc;
+        address token1 = weth < usdc ? usdc : weth;
 
         PoolKey memory key = PoolKey({
             currency0: Currency.wrap(token0),
@@ -146,12 +151,13 @@ contract DeployScript is Script {
 
         // ── 7. Print deployment summary ────────────────────────────────────
         console2.log("\n=== ThaHtayHook Deployment Summary ===");
-        console2.log("Network:             Unichain Sepolia");
+        console2.log("Chain ID:           ", block.chainid);
         console2.log("ThaHtayHook:        ", address(hook));
         console2.log("PositionManager:    ", address(posMgr));
         console2.log("FundingRateManager: ", address(fundMgr));
         console2.log("LiquidationEngine:  ", address(liqEngine));
         console2.log("Treasury:           ", treasury);
+        console2.log("WETH:               ", weth);
         console2.log("USDC:               ", usdc);
         console2.log("PoolManager:        ", poolMgr);
         console2.log("=======================================\n");

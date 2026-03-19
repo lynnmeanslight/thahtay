@@ -50,8 +50,8 @@ const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;    // deployed Pr
 const HOOK_ADDRESS         = process.env.HOOK_ADDRESS ?? '0xeb5851c6014C5a5F5A062C1331826b0789C3F0C0';
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS ?? 60_000); // 1 min default
 // This must match PriceKeeper.THRESHOLD_BPS in sqrtPrice space.
-// THRESHOLD_BPS=50 => sqrt drift 0.5%, which is roughly ~1% ETH price drift.
-const SQRT_DRIFT_THRESHOLD = 0.005;
+// THRESHOLD_BPS=13 => sqrt drift 0.13%, which is roughly ~0.26% ETH price drift.
+const SQRT_DRIFT_THRESHOLD = 0.0013;
 
 if (!PRIVATE_KEY)          throw new Error('Missing PRIVATE_KEY in .env');
 if (!PRICE_KEEPER_ADDRESS) throw new Error('Missing PRICE_KEEPER_ADDRESS in .env');
