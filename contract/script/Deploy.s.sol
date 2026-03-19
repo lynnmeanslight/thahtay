@@ -6,7 +6,10 @@ import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "@uniswap/v4-core/src/types/Currency.sol";
+import {
+    Currency,
+    CurrencyLibrary
+} from "@uniswap/v4-core/src/types/Currency.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 
 import {ThaHtayHook} from "../src/ThaHtayHook.sol";
@@ -26,11 +29,11 @@ import {HookMiner} from "@uniswap/v4-periphery/src/utils/HookMiner.sol";
 contract DeployScript is Script {
     // Uniswap v4 PoolManager on Unichain Sepolia
     // Update this after official Uniswap v4 Unichain deployment is published.
-    address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
+    address constant POOL_MANAGER = 0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408;
 
     // Unichain Sepolia token addresses (update before deploying)
-    address constant WETH   = 0x4200000000000000000000000000000000000006;
-    address constant USDC   = 0x31d0220469e10c4E71834a79b1f276d740d3768F;
+    address constant WETH = 0x91CaBba8C9C706E38c92be1721eEA49277De643e;
+    address constant USDC = 0x999b01E1f0A37401b4Bc0DE63F16284Ae9296b9E;
 
     // Pool fee tier: 0.3%
     uint24 constant POOL_FEE = 3000;
@@ -41,8 +44,8 @@ contract DeployScript is Script {
     function run() external {
         address deployer = vm.envAddress("DEPLOYER_ADDRESS");
         address treasury = vm.envOr("PROTOCOL_TREASURY", deployer);
-        address poolMgr  = vm.envOr("POOL_MANAGER_ADDRESS", POOL_MANAGER);
-        address usdc     = vm.envOr("USDC_ADDRESS", USDC);
+        address poolMgr = vm.envOr("POOL_MANAGER_ADDRESS", POOL_MANAGER);
+        address usdc = vm.envOr("USDC_ADDRESS", USDC);
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
@@ -70,9 +73,9 @@ contract DeployScript is Script {
         // Required flags: BEFORE_INITIALIZE | AFTER_INITIALIZE | BEFORE_SWAP | AFTER_SWAP
         uint160 flags = uint160(
             Hooks.BEFORE_INITIALIZE_FLAG |
-            Hooks.AFTER_INITIALIZE_FLAG  |
-            Hooks.BEFORE_SWAP_FLAG       |
-            Hooks.AFTER_SWAP_FLAG
+                Hooks.AFTER_INITIALIZE_FLAG |
+                Hooks.BEFORE_SWAP_FLAG |
+                Hooks.AFTER_SWAP_FLAG
         );
 
         // Pack constructor args with the real liquidationEngine address
@@ -110,7 +113,10 @@ contract DeployScript is Script {
             treasury,
             deployer
         );
-        require(address(hook) == hookAddress, "Deploy: hook address mismatch -- re-mine salt");
+        require(
+            address(hook) == hookAddress,
+            "Deploy: hook address mismatch -- re-mine salt"
+        );
         console2.log("ThaHtayHook:        ", address(hook));
 
         // ── 5. Grant HOOK_ROLE to ThaHtayHook on all supporting contracts ──
