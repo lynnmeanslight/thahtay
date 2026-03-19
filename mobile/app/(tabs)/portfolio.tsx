@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
   RefreshControl,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +16,7 @@ import { fetchTraderHistory } from '../../src/services/graphService';
 import { formatUSD, formatPnl, formatPrice } from '../../src/utils/formatting';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
+import { useCollateral } from '../../src/hooks/useCollateral';
 
 export default function PortfolioScreen() {
   const { address } = useAccount();
@@ -81,6 +84,9 @@ export default function PortfolioScreen() {
             }
           />
         </View>
+
+        {/* Collateral */}
+        <CollateralPanel />
 
         {/* Trade history */}
         <Text style={styles.sectionTitle}>Trade History</Text>
@@ -191,4 +197,132 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     marginTop: 2,
   },
+  // Collateral panel
+  collateralPanel: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 10,
+  },
+  collateralHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  collateralTitle: { color: colors.textPrimary, fontSize: typography.md, fontWeight: '700' },
+  collateralBalance: {
+    color: colors.primary,
+    fontSize: typography.md,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  collateralRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  collateralInput: {
+    flex: 1,
+    backgroundColor: colors.bgInput,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textPrimary,
+    fontSize: typography.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  btnDeposit: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  btnDepositDisabled: {
+    backgroundColor: colors.bgHighlight,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  btnWithdraw: {
+    backgroundColor: colors.bgHighlight,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  btnText: { fontSize: typography.sm, fontWeight: '700' },
+  feedbackSuccess: { color: colors.profit, fontSize: typography.xs },
+  feedbackError: { color: colors.loss, fontSize: typography.xs },
 });
+
+function CollateralPanel() {
+  const { collateralBalance, deposit, withdraw, status, resetStatus } = useCollateral();
+  const [rawAmount, setRawAmount] = useState('');
+
+  const parsedAmount = (() => {
+    const n = parseFloat(rawAmount);
+    if (!rawAmount || isNaN(n) || n <= 0) return null;
+    return BigInt(Math.round(n * 1_000_000));
+  })();
+
+  const handleDeposit = async () => {
+    if (!parsedAmount) return;
+    try {
+      await deposit(parsedAmount);
+      setRawAmount('');
+    } catch { /* error surfaced via status */ }
+  };
+
+  const handleWithdraw = async () => {
+    if (!parsedAmount) return;
+    try {
+      await withdraw(parsedAmount);
+      setRawAmount('');
+    } catch { /* error surfaced via status */ }
+  };
+
+  return (
+    <View style={styles.collateralPanel}>
+      <View style={styles.collateralHeader}>
+        <Text style={styles.collateralTitle}>Vault Collateral</Text>
+        <Text style={styles.collateralBalance}>{formatUSD(collateralBalance, 6)}</Text>
+      </View>
+
+      <View style={styles.collateralRow}>
+        <TextInput
+          style={styles.collateralInput}
+          placeholder="USDC amount"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="decimal-pad"
+          value={rawAmount}
+          onChangeText={(t) => { resetStatus(); setRawAmount(t); }}
+        />
+        <TouchableOpacity
+          style={parsedAmount && !status.isLoading ? styles.btnDeposit : styles.btnDepositDisabled}
+          onPress={() => void handleDeposit()}
+          disabled={!parsedAmount || status.isLoading}
+        >
+          <Text style={[styles.btnText, { color: parsedAmount && !status.isLoading ? '#000' : colors.textMuted }]}>
+            {status.isLoading ? '...' : 'Deposit'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.btnWithdraw}
+          onPress={() => void handleWithdraw()}
+          disabled={!parsedAmount || status.isLoading}
+        >
+          <Text style={[styles.btnText, { color: parsedAmount && !status.isLoading ? colors.textPrimary : colors.textMuted }]}>
+            {status.isLoading ? '...' : 'Withdraw'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {status.isSuccess && (
+        <Text style={styles.feedbackSuccess}>Transaction confirmed!</Text>
+      )}
+      {status.error && (
+        <Text style={styles.feedbackError}>{status.error.message.slice(0, 80)}</Text>
+      )}
+    </View>
+  );
+}

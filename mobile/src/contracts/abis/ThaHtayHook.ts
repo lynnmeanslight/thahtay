@@ -133,4 +133,42 @@ export const THAHTAYHOOK_ABI = [
       { name: 'shortCumulativeIndex',  type: 'uint256', indexed: false },
     ],
   },
+  // ─── Deposit / Withdraw Collateral ────────────────────────────────────
+  {
+    type: 'function',
+    name: 'depositCollateral',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'withdrawCollateral',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'collateralBalance',
+    stateMutability: 'view',
+    inputs: [{ name: 'trader', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'event',
+    name: 'CollateralDeposited',
+    inputs: [
+      { name: 'trader', type: 'address', indexed: true  },
+      { name: 'amount', type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'CollateralWithdrawn',
+    inputs: [
+      { name: 'trader', type: 'address', indexed: true  },
+      { name: 'amount', type: 'uint256', indexed: false },
+    ],
+  },
 ] as const;

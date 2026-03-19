@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
 import { useWalletStore } from '../store/useWalletStore';
 import { fetchTraderHistory } from '../services/graphService';
 import { formatUSD, formatPnl } from '../utils/formatting';
 import { colors } from '../theme/colors';
+import { useCollateral } from '../hooks/useCollateral';
 
 export function PortfolioPage() {
   const { address } = useAccount();
@@ -65,6 +67,9 @@ export function PortfolioPage() {
         />
       </div>
 
+      {/* Collateral */}
+      <CollateralPanel />
+
       {/* Trade history */}
       <h3 style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700, margin: 0 }}>Trade History</h3>
 
@@ -110,6 +115,117 @@ export function PortfolioPage() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function CollateralPanel() {
+  const { collateralBalance, deposit, withdraw, status, resetStatus } = useCollateral();
+  const [rawAmount, setRawAmount] = useState('');
+
+  const parsedAmount = (() => {
+    const n = parseFloat(rawAmount);
+    if (!rawAmount || isNaN(n) || n <= 0) return null;
+    return BigInt(Math.round(n * 1_000_000)); // USDC 6 decimals
+  })();
+
+  const handleDeposit = async () => {
+    if (!parsedAmount) return;
+    try {
+      await deposit(parsedAmount);
+      setRawAmount('');
+    } catch { /* error surfaced via status */ }
+  };
+
+  const handleWithdraw = async () => {
+    if (!parsedAmount) return;
+    try {
+      await withdraw(parsedAmount);
+      setRawAmount('');
+    } catch { /* error surfaced via status */ }
+  };
+
+  return (
+    <div
+      style={{
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 14,
+        padding: 16,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700 }}>
+          Vault Collateral
+        </span>
+        <span style={{ color: colors.primary, fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+          {formatUSD(collateralBalance, 6)}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="number"
+          min="0"
+          placeholder="USDC amount"
+          value={rawAmount}
+          onChange={(e) => { resetStatus(); setRawAmount(e.target.value); }}
+          style={{
+            flex: 1,
+            background: colors.bgInput,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 8,
+            color: colors.textPrimary,
+            fontSize: 14,
+            padding: '8px 12px',
+            outline: 'none',
+          }}
+        />
+        <button
+          onClick={() => void handleDeposit()}
+          disabled={!parsedAmount || status.isLoading}
+          style={{
+            background: parsedAmount && !status.isLoading ? colors.primary : colors.bgHighlight,
+            border: 'none',
+            borderRadius: 8,
+            color: parsedAmount && !status.isLoading ? '#000' : colors.textMuted,
+            fontSize: 13,
+            fontWeight: 700,
+            padding: '8px 16px',
+            cursor: parsedAmount && !status.isLoading ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {status.isLoading ? '...' : 'Deposit'}
+        </button>
+        <button
+          onClick={() => void handleWithdraw()}
+          disabled={!parsedAmount || status.isLoading}
+          style={{
+            background: colors.bgHighlight,
+            border: `1px solid ${colors.borderLight}`,
+            borderRadius: 8,
+            color: parsedAmount && !status.isLoading ? colors.textPrimary : colors.textMuted,
+            fontSize: 13,
+            fontWeight: 700,
+            padding: '8px 16px',
+            cursor: parsedAmount && !status.isLoading ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {status.isLoading ? '...' : 'Withdraw'}
+        </button>
+      </div>
+
+      {status.isSuccess && (
+        <span style={{ color: colors.profit, fontSize: 12 }}>Transaction confirmed!</span>
+      )}
+      {status.error && (
+        <span style={{ color: colors.loss, fontSize: 12 }}>
+          {status.error.message.slice(0, 80)}
+        </span>
+      )}
     </div>
   );
 }
