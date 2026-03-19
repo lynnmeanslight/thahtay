@@ -24,97 +24,79 @@ export function PortfolioPage() {
   );
 
   if (!address) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
-        <span style={{ color: colors.textSecondary, fontSize: 14 }}>
-          Connect your wallet to view portfolio
-        </span>
-      </div>
-    );
+    return <div className="empty"><p>Connect your wallet</p></div>;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 800, margin: 0 }}>Portfolio</h2>
-        <button
-          onClick={() => void refetch()}
-          style={{
-            background: colors.bgHighlight,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 8,
-            color: colors.textSecondary,
-            fontSize: 12,
-            padding: '6px 12px',
-            cursor: 'pointer',
-          }}
-        >
-          Refresh
-        </button>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Balances */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        <BalanceCard label="USDC Balance" value={usdcBalance != null ? formatUSD(BigInt(usdcBalance), 6) : '--'} />
-        <BalanceCard
-          label="ETH Balance"
-          value={ethBalance != null ? `${(Number(ethBalance) / 1e18).toFixed(4)} ETH` : '--'}
-        />
-        <BalanceCard
-          label="Realized PnL"
-          value={formatPnl(totalRealizedPnl)}
-          valueColor={totalRealizedPnl >= 0n ? colors.profit : colors.loss}
-        />
+      <div>
+        <p className="label" style={{ marginBottom: 10 }}>Balances</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          <BalCard label="USDC" value={usdcBalance != null ? formatUSD(BigInt(usdcBalance), 6) : '—'} />
+          <BalCard label="ETH" value={ethBalance != null ? `${(Number(ethBalance) / 1e18).toFixed(4)}` : '—'} />
+          <BalCard
+            label="Realized PnL"
+            value={formatPnl(totalRealizedPnl)}
+            valueColor={totalRealizedPnl >= 0n ? colors.profit : colors.loss}
+          />
+        </div>
       </div>
 
-      {/* Collateral */}
       <CollateralPanel />
 
-      {/* Trade history */}
-      <h3 style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700, margin: 0 }}>Trade History</h3>
-
-      {isLoading && <span style={{ color: colors.textSecondary, fontSize: 13 }}>Loading...</span>}
-      {!isLoading && history.length === 0 && (
-        <span style={{ color: colors.textSecondary, fontSize: 13 }}>No trades yet</span>
-      )}
-
-      {history.map((trade: any, i: number) => (
-        <div
-          key={trade.id ?? i}
-          style={{
-            background: colors.surface,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 12,
-            padding: 12,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <div style={{ color: colors.textPrimary, fontSize: 13, fontWeight: 600 }}>ETH-USDC</div>
-            <div style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>
-              {new Date(Number(trade.timestamp) * 1000).toLocaleDateString()}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: trade.isLong ? colors.profit : colors.loss, fontSize: 11, fontWeight: 700 }}>
-              {trade.isLong ? 'Long' : 'Short'}
-            </div>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <p className="label">Trade History</p>
+          <button className="btn btn-ghost" onClick={() => void refetch()} style={{ height: 28, fontSize: 11 }}>Refresh</button>
+        </div>
+        {isLoading && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+        {!isLoading && history.length === 0 && (
+          <div className="empty" style={{ paddingTop: 30 }}><p>No trades yet</p></div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {history.map((trade: any, i: number) => (
             <div
+              key={trade.id ?? i}
               style={{
-                color: BigInt(trade.pnl ?? '0') >= 0n ? colors.profit : colors.loss,
-                fontSize: 13,
-                fontWeight: 700,
-                fontVariantNumeric: 'tabular-nums',
-                marginTop: 2,
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '10px 14px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
               }}
             >
-              {formatPnl(BigInt(trade.pnl ?? '0'))}
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>ETH-USDC</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+                  {new Date(Number(trade.timestamp) * 1000).toLocaleDateString()}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' as const, color: trade.isLong ? colors.profit : colors.loss }}>
+                  {trade.isLong ? 'Long' : 'Short'}
+                </p>
+                <p style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2, color: BigInt(trade.pnl ?? '0') >= 0n ? colors.profit : colors.loss }}>
+                  {formatPnl(BigInt(trade.pnl ?? '0'))}
+                </p>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      ))}
+      </div>
+    </div>
+  );
+}
+
+function BalCard({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 12px' }}>
+      <p className="label" style={{ marginBottom: 6 }}>{label}</p>
+      <p style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: valueColor ?? 'var(--text)' }}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -126,131 +108,45 @@ function CollateralPanel() {
   const parsedAmount = (() => {
     const n = parseFloat(rawAmount);
     if (!rawAmount || isNaN(n) || n <= 0) return null;
-    return BigInt(Math.round(n * 1_000_000)); // USDC 6 decimals
+    return BigInt(Math.round(n * 1_000_000));
   })();
 
   const handleDeposit = async () => {
     if (!parsedAmount) return;
-    try {
-      await deposit(parsedAmount);
-      setRawAmount('');
-    } catch { /* error surfaced via status */ }
+    try { await deposit(parsedAmount); setRawAmount(''); } catch { /* surfaced via status */ }
   };
 
   const handleWithdraw = async () => {
     if (!parsedAmount) return;
-    try {
-      await withdraw(parsedAmount);
-      setRawAmount('');
-    } catch { /* error surfaced via status */ }
+    try { await withdraw(parsedAmount); setRawAmount(''); } catch { /* surfaced via status */ }
   };
 
   return (
-    <div
-      style={{
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 14,
-        padding: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700 }}>
-          Vault Collateral
-        </span>
-        <span style={{ color: colors.primary, fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <p className="label">Vault Collateral</p>
+        <span style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: colors.accent }}>
           {formatUSD(collateralBalance, 6)}
         </span>
       </div>
-
       <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="number"
-          min="0"
-          placeholder="USDC amount"
-          value={rawAmount}
-          onChange={(e) => { resetStatus(); setRawAmount(e.target.value); }}
-          style={{
-            flex: 1,
-            background: colors.bgInput,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 8,
-            color: colors.textPrimary,
-            fontSize: 14,
-            padding: '8px 12px',
-            outline: 'none',
-          }}
-        />
-        <button
-          onClick={() => void handleDeposit()}
-          disabled={!parsedAmount || status.isLoading}
-          style={{
-            background: parsedAmount && !status.isLoading ? colors.primary : colors.bgHighlight,
-            border: 'none',
-            borderRadius: 8,
-            color: parsedAmount && !status.isLoading ? '#000' : colors.textMuted,
-            fontSize: 13,
-            fontWeight: 700,
-            padding: '8px 16px',
-            cursor: parsedAmount && !status.isLoading ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {status.isLoading ? '...' : 'Deposit'}
-        </button>
-        <button
-          onClick={() => void handleWithdraw()}
-          disabled={!parsedAmount || status.isLoading}
-          style={{
-            background: colors.bgHighlight,
-            border: `1px solid ${colors.borderLight}`,
-            borderRadius: 8,
-            color: parsedAmount && !status.isLoading ? colors.textPrimary : colors.textMuted,
-            fontSize: 13,
-            fontWeight: 700,
-            padding: '8px 16px',
-            cursor: parsedAmount && !status.isLoading ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {status.isLoading ? '...' : 'Withdraw'}
-        </button>
+        <div className="input-wrap" style={{ flex: 1 }}>
+          <input
+            className="input"
+            type="number"
+            min="0"
+            placeholder="0.00"
+            value={rawAmount}
+            onChange={(e) => { resetStatus(); setRawAmount(e.target.value); }}
+            style={{ fontSize: 14, padding: '9px 14px' }}
+          />
+          <span style={{ padding: '0 10px 0 0', fontSize: 11, color: 'var(--text-2)' }}>USDC</span>
+        </div>
+        <button className="btn btn-accent" onClick={() => void handleDeposit()} disabled={!parsedAmount || status.isLoading} style={{ height: 42 }}>Deposit</button>
+        <button className="btn btn-ghost" onClick={() => void handleWithdraw()} disabled={!parsedAmount || status.isLoading} style={{ height: 42 }}>Withdraw</button>
       </div>
-
-      {status.isSuccess && (
-        <span style={{ color: colors.profit, fontSize: 12 }}>Transaction confirmed!</span>
-      )}
-      {status.error && (
-        <span style={{ color: colors.loss, fontSize: 12 }}>
-          {status.error.message.slice(0, 80)}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function BalanceCard({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
-  return (
-    <div
-      style={{
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 14,
-        padding: 14,
-      }}
-    >
-      <div style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 6 }}>{label}</div>
-      <div
-        style={{
-          color: valueColor ?? colors.textPrimary,
-          fontSize: 15,
-          fontWeight: 700,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {value}
-      </div>
+      {status.error && <p style={{ color: colors.loss, fontSize: 11, marginTop: 8 }}>{status.error.message.slice(0, 80)}</p>}
+      {status.isSuccess && <p style={{ color: colors.accent, fontSize: 11, marginTop: 8 }}>✓ Confirmed</p>}
     </div>
   );
 }

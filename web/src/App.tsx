@@ -10,8 +10,6 @@ import { useWalletStore } from './store/useWalletStore';
 import { getAddresses } from './contracts/addresses';
 import { ERC20_ABI } from './contracts/abis/index';
 import { useReadContract } from 'wagmi';
-import { colors } from './theme/colors';
-import { formatUSD } from './utils/formatting';
 
 type Tab = 'trade' | 'positions' | 'liquidations' | 'portfolio';
 
@@ -38,137 +36,57 @@ function WalletSync() {
   });
 
   useEffect(() => {
-    if (isConnected && address) {
-      setAddress(address);
-      setChainId(chainId);
-    } else {
-      disconnect();
-    }
+    if (isConnected && address) { setAddress(address); setChainId(chainId); }
+    else disconnect();
   }, [isConnected, address, chainId, setAddress, setChainId, disconnect]);
 
-  useEffect(() => {
-    if (ethBalance) setEthBalance(ethBalance.value);
-  }, [ethBalance, setEthBalance]);
-
-  useEffect(() => {
-    if (usdcBalance != null) setUsdcBalance(usdcBalance as bigint);
-  }, [usdcBalance, setUsdcBalance]);
+  useEffect(() => { if (ethBalance) setEthBalance(ethBalance.value); }, [ethBalance, setEthBalance]);
+  useEffect(() => { if (usdcBalance != null) setUsdcBalance(usdcBalance as bigint); }, [usdcBalance, setUsdcBalance]);
 
   return null;
 }
 
 function AppInner() {
   const [activeTab, setActiveTab] = useState<Tab>('trade');
-  const { usdcBalance, isConnected } = useWalletStore();
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: colors.bg,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <WalletSync />
 
-      {/* Top navbar */}
-      <header
-        style={{
-          background: colors.surface,
-          borderBottom: `1px solid ${colors.border}`,
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 56,
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ color: colors.primary, fontWeight: 900, fontSize: 18, letterSpacing: '-0.5px' }}>
-            ThaHtay
+      <header className="nav">
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px', color: 'var(--text)' }}>
+            thahtay
           </span>
-          <span
-            style={{
-              background: colors.primary + '22',
-              color: colors.primary,
-              fontSize: 10,
-              fontWeight: 700,
-              padding: '1px 6px',
-              borderRadius: 4,
-              marginLeft: 6,
-            }}
-          >
-            PERP
+          <span style={{
+            background: 'rgba(0,212,161,0.1)',
+            color: 'var(--accent)',
+            fontSize: 9,
+            fontWeight: 700,
+            padding: '2px 6px',
+            borderRadius: 4,
+            letterSpacing: '1.2px',
+            textTransform: 'uppercase',
+          }}>
+            perp
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {isConnected && (
-            <div
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 8,
-                padding: '4px 10px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-              }}
-            >
-              <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 600 }}>USDC</span>
-              <span style={{ color: colors.textPrimary, fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                {formatUSD(usdcBalance, 6)}
-              </span>
-            </div>
-          )}
-          <WalletButton />
-        </div>
+        <WalletButton />
       </header>
 
-      {/* Tab bar */}
-      <nav
-        style={{
-          background: colors.surface,
-          borderBottom: `1px solid ${colors.border}`,
-          display: 'flex',
-          padding: '0 20px',
-        }}
-      >
+      <nav className="tabs">
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            className={`tab${activeTab === tab.id ? ' active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              borderBottom: `2px solid ${activeTab === tab.id ? colors.primary : 'transparent'}`,
-              color: activeTab === tab.id ? colors.primary : colors.textSecondary,
-              fontWeight: activeTab === tab.id ? 700 : 500,
-              fontSize: 13,
-              padding: '12px 16px',
-              cursor: 'pointer',
-              transition: 'color 0.15s',
-            }}
           >
             {tab.label}
           </button>
         ))}
       </nav>
 
-      {/* Page content */}
-      <main
-        style={{
-          flex: 1,
-          maxWidth: 520,
-          width: '100%',
-          margin: '0 auto',
-          padding: '20px 16px',
-          boxSizing: 'border-box',
-        }}
-      >
+      <main style={{ flex: 1, maxWidth: 480, width: '100%', margin: '0 auto', padding: '20px 16px' }}>
         {activeTab === 'trade'        && <TradePage />}
         {activeTab === 'positions'    && <PositionsPage />}
         {activeTab === 'liquidations' && <LiquidationsPage />}

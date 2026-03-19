@@ -1,69 +1,45 @@
 import { useAccount } from 'wagmi';
 import { usePosition } from '../hooks/usePosition';
 import { PositionCard } from '../components/PositionCard';
-import { colors } from '../theme/colors';
 
 export function PositionsPage() {
   const { address } = useAccount();
   const { position, isLoading, error, refetch } = usePosition(address);
 
-  if (!address) {
-    return (
-      <div style={centeredStyle}>
-        <span style={{ color: colors.textSecondary, fontSize: 14 }}>
-          Connect your wallet to view positions
-        </span>
-      </div>
-    );
-  }
+  if (!address) return (
+    <div className="empty"><p>Connect your wallet</p></div>
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 800, margin: 0 }}>
-          Open Positions
-        </h2>
-        <button
-          onClick={refetch}
-          style={{
-            background: colors.bgHighlight,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 8,
-            color: colors.textSecondary,
-            fontSize: 12,
-            padding: '6px 12px',
-            cursor: 'pointer',
-          }}
-        >
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Open Positions</h2>
+        <button className="btn btn-ghost" onClick={refetch} style={{ height: 30, fontSize: 11 }}>
           Refresh
         </button>
       </div>
 
-      {isLoading && !position && (
-        <span style={{ color: colors.textSecondary, fontSize: 13 }}>Loading...</span>
-      )}
-
       {error && (
-        <div
-          style={{
-            background: colors.bgHighlight,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 10,
-            padding: '10px 12px',
-            color: colors.loss,
-            fontSize: 12,
-          }}
-        >
-          Failed to load indexed position data. Falling back to on-chain reads when available.
+        <div style={{
+          background: 'rgba(244,63,94,0.05)',
+          border: '1px solid rgba(244,63,94,0.2)',
+          borderRadius: 8,
+          padding: '10px 12px',
+          color: 'var(--loss)',
+          fontSize: 12,
+        }}>
+          Indexed data unavailable — on-chain fallback active.
         </div>
       )}
 
+      {isLoading && !position && (
+        <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>
+      )}
+
       {!isLoading && !position && (
-        <div style={centeredStyle}>
-          <span style={{ color: colors.textSecondary, fontSize: 14 }}>No open positions</span>
-          <span style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
-            Open a trade on the Trade tab to get started.
-          </span>
+        <div className="empty">
+          <p>No open positions</p>
+          <small>Go to Trade to open one</small>
         </div>
       )}
 
@@ -71,12 +47,3 @@ export function PositionsPage() {
     </div>
   );
 }
-
-const centeredStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingTop: 80,
-  textAlign: 'center',
-};

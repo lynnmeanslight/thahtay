@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useAccount, useDisconnect, useConnect } from 'wagmi';
-import { colors } from '../theme/colors';
 
-function shortenAddress(addr: string): string {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+function short(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export function WalletButton() {
@@ -15,30 +14,12 @@ export function WalletButton() {
   if (isConnected && address) {
     return (
       <button
+        className="btn btn-ghost"
         onClick={() => disconnect()}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: colors.surface,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 10,
-          padding: '8px 14px',
-          cursor: 'pointer',
-        }}
+        style={{ gap: 6, fontSize: 12, fontWeight: 500 }}
       >
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: colors.profit,
-            display: 'inline-block',
-          }}
-        />
-        <span style={{ color: colors.textPrimary, fontSize: 13, fontWeight: 500 }}>
-          {shortenAddress(address)}
-        </span>
+        <span className="dot-live" />
+        {short(address)}
       </button>
     );
   }
@@ -46,90 +27,47 @@ export function WalletButton() {
   return (
     <div style={{ position: 'relative' }}>
       <button
+        className="btn btn-accent"
         onClick={() => setOpen((v) => !v)}
-        style={{
-          background: colors.primary,
-          color: colors.bg,
-          border: 'none',
-          borderRadius: 10,
-          padding: '10px 20px',
-          fontWeight: 700,
-          fontSize: 13,
-          cursor: 'pointer',
-        }}
+        style={{ fontSize: 12, fontWeight: 700 }}
       >
-        Connect Wallet
+        {isPending ? 'Connecting…' : 'Connect'}
       </button>
 
       {open && (
         <>
-          {/* backdrop */}
-          <div
-            onClick={() => setOpen(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 99,
-            }}
-          />
-          {/* picker */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 8px)',
-              right: 0,
-              zIndex: 100,
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              padding: 12,
-              minWidth: 200,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
-            <p style={{ color: colors.textSecondary, fontSize: 11, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 1 }}>
-              Select Wallet
-            </p>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            right: 0,
+            zIndex: 100,
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 10,
+            padding: 8,
+            minWidth: 180,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}>
+            <p className="label" style={{ padding: '4px 8px 8px' }}>Select wallet</p>
             {connectors.length === 0 && (
-              <p style={{ color: colors.textSecondary, fontSize: 12, margin: 0 }}>
-                No wallets detected. Install MetaMask and refresh.
-              </p>
+              <p style={{ color: 'var(--text-2)', fontSize: 12, padding: '0 8px 4px' }}>No wallets found</p>
             )}
             {connectors.map((connector) => (
               <button
                 key={connector.uid}
+                className="btn btn-ghost"
                 disabled={isPending}
-                onClick={() => {
-                  connect(
-                    { connector },
-                    {
-                      onSuccess: () => setOpen(false),
-                      onError: (err) => {
-                        console.error('Wallet connect error:', err);
-                      },
-                    },
-                  );
-                }}
-                style={{
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 8,
-                  padding: '10px 14px',
-                  color: colors.textPrimary,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: isPending ? 'wait' : 'pointer',
-                  textAlign: 'left',
-                  opacity: isPending ? 0.6 : 1,
-                }}
+                onClick={() => { connect({ connector }, { onSuccess: () => setOpen(false) }); }}
+                style={{ width: '100%', justifyContent: 'flex-start', height: 36, padding: '0 10px', fontSize: 13 }}
               >
                 {isPending ? 'Connecting…' : connector.name}
               </button>
             ))}
             {error && (
-              <p style={{ color: colors.loss ?? '#f87171', fontSize: 12, margin: '4px 0 0', wordBreak: 'break-word' }}>
+              <p style={{ color: 'var(--loss)', fontSize: 11, padding: '4px 8px 0', wordBreak: 'break-word' }}>
                 {error.message}
               </p>
             )}

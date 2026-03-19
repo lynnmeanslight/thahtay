@@ -1,19 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
 import { fetchAtRiskPositions, fetchLiquidations, type GqlLiquidation } from '../services/graphService';
 import { useTrade } from '../hooks/useTrade';
 import { formatPrice, formatUSD } from '../utils/formatting';
 import { colors } from '../theme/colors';
 
-const WARN_RATIO = 10;
-
-function shortenAddress(addr: string): string {
-  if (!addr) return '--';
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+function short(addr: string) {
+  if (!addr) return '—';
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export function LiquidationsPage() {
-  const { address } = useAccount();
   const { liquidate, status } = useTrade();
 
   const { data: atRisk = [], isLoading: loadingAtRisk, refetch: refetchAtRisk } = useQuery({
@@ -32,151 +28,113 @@ export function LiquidationsPage() {
     try {
       await liquidate(trader as `0x${string}`);
       refetchAtRisk();
-      alert('Position liquidated! Bonus sent to your wallet.');
+      alert('Liquidated — 5% bonus sent to your wallet.');
     } catch (e: unknown) {
       const err = e as { shortMessage?: string; message?: string };
-      alert(`Liquidation failed: ${err?.shortMessage ?? err?.message ?? 'Unknown error'}`);
+      alert(`Liquidation failed: ${err?.shortMessage ?? err?.message ?? 'Unknown'}`);
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <h2 style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 800, margin: 0 }}>
-          Liquidation Monitor
-        </h2>
-        <p style={{ color: colors.textMuted, fontSize: 13, marginTop: 4 }}>
-          Earn 5% bonus by liquidating at-risk positions.
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Liquidations</h2>
+        <p style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          Earn a 5% bonus by liquidating under-margined positions.
         </p>
       </div>
 
       {/* At-risk positions */}
-      <section>
-        <h3 style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-          At Risk ({atRisk.length})
-        </h3>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <p className="label">At risk ({atRisk.length})</p>
+          <button className="btn btn-ghost" onClick={() => void refetchAtRisk()} style={{ height: 28, fontSize: 11 }}>Refresh</button>
+        </div>
 
-        {loadingAtRisk && (
-          <span style={{ color: colors.textSecondary, fontSize: 13 }}>Loading...</span>
-        )}
+        {loadingAtRisk && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+
         {!loadingAtRisk && atRisk.length === 0 && (
-          <span style={{ color: colors.textSecondary, fontSize: 13 }}>No positions at risk</span>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 16px', textAlign: 'center', color: 'var(--text-2)', fontSize: 12 }}>
+            No positions at risk
+          </div>
         )}
 
-        {atRisk.map((pos: any) => {
-          const marginRatio = parseFloat(pos.marginRatio ?? '100');
-          const isAtRisk = marginRatio <= WARN_RATIO;
-          return (
-            <div
-              key={pos.id}
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 14,
-                padding: 14,
-                marginBottom: 10,
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ color: colors.textPrimary, fontSize: 13, fontWeight: 600 }}>
-                  {shortenAddress(pos.trader)}
-                </span>
-                <span
-                  style={{
-                    background: isAtRisk ? colors.loss + '22' : colors.bgHighlight,
-                    color: isAtRisk ? colors.loss : colors.textSecondary,
-                    borderRadius: 6,
-                    padding: '2px 8px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                >
-                  {marginRatio.toFixed(2)}% margin
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
-                <Detail label="Side" value={pos.isLong ? 'Long' : 'Short'} />
-                <Detail label="Size" value={formatUSD(BigInt(pos.size ?? '0'), 18)} />
-                <Detail label="Entry" value={`$${formatPrice(BigInt(pos.entryPrice ?? '0'))}`} />
-                <Detail label="Lev" value={`${pos.leverage}x`} />
-              </div>
-
-              {address && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {atRisk.map((pos: any) => {
+            const marginRatio = parseFloat(pos.marginRatio ?? '100');
+            return (
+              <div
+                key={pos.id}
+                style={{ background: 'var(--surface)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: 12, padding: 14 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{short(pos.trader)}</p>
+                    <p style={{ fontSize: 10, marginTop: 2, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' as const, color: pos.isLong ? colors.profit : colors.loss }}>
+                      {pos.isLong ? 'Long' : 'Short'} · {pos.leverage}×
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 10, color: 'var(--text-2)' }}>Margin ratio</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: colors.loss, fontVariantNumeric: 'tabular-nums' }}>
+                      {marginRatio.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                  <div className="stat-row" style={{ fontSize: 12 }}>
+                    <span className="key">Size</span>
+                    <span className="val">{formatUSD(BigInt(pos.size ?? '0'), 18)}</span>
+                  </div>
+                  <div className="stat-row" style={{ fontSize: 12 }}>
+                    <span className="key">Entry</span>
+                    <span className="val">${formatPrice(BigInt(pos.entryPrice ?? '0'))}</span>
+                  </div>
+                  <div className="stat-row" style={{ fontSize: 12 }}>
+                    <span className="key">Liq. price</span>
+                    <span className="val" style={{ color: colors.loss }}>
+                      ${formatPrice(BigInt(pos.liquidationPrice ?? '0'))}
+                    </span>
+                  </div>
+                </div>
                 <button
+                  className="btn btn-danger"
                   onClick={() => handleLiquidate(pos.trader)}
                   disabled={status.isLoading}
-                  style={{
-                    width: '100%',
-                    background: colors.loss,
-                    border: 'none',
-                    borderRadius: 10,
-                    color: colors.textPrimary,
-                    fontWeight: 700,
-                    fontSize: 13,
-                    padding: '10px 0',
-                    cursor: status.isLoading ? 'not-allowed' : 'pointer',
-                    opacity: status.isLoading ? 0.6 : 1,
-                  }}
+                  style={{ width: '100%', height: 38 }}
                 >
-                  {status.isLoading ? 'Liquidating...' : 'Liquidate (+5% bonus)'}
+                  {status.isLoading ? 'Confirming…' : 'Liquidate (+5% bonus)'}
                 </button>
-              )}
-            </div>
-          );
-        })}
-      </section>
-
-      {/* Recent liquidations */}
-      <section>
-        <h3 style={{ color: colors.textPrimary, fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-          Recent Liquidations
-        </h3>
-
-        {loadingRecent && (
-          <span style={{ color: colors.textSecondary, fontSize: 13 }}>Loading...</span>
-        )}
-        {!loadingRecent && recent.length === 0 && (
-          <span style={{ color: colors.textSecondary, fontSize: 13 }}>No recent liquidations</span>
-        )}
-
-        {recent.slice(0, 10).map((liq: any, i: number) => (
-          <div
-            key={liq.id ?? i}
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              padding: 12,
-              marginBottom: 8,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <div style={{ color: colors.textPrimary, fontSize: 13, fontWeight: 600 }}>
-                {shortenAddress(liq.trader)}
               </div>
-              <div style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>
-                {new Date(Number(liq.timestamp) * 1000).toLocaleString()}
+            );
+          })}
+        </div>
+      </div>
+
+      {(recent.length > 0 || loadingRecent) && (
+        <div>
+          <p className="label" style={{ marginBottom: 10 }}>Recent</p>
+          {loadingRecent && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {recent.slice(0, 10).map((liq: any, i: number) => (
+              <div
+                key={liq.id ?? i}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8 }}
+              >
+                <div>
+                  <p style={{ fontSize: 12, color: 'var(--text)' }}>{short(liq.trader)}</p>
+                  <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>
+                    {new Date(Number(liq.timestamp) * 1000).toLocaleDateString()}
+                  </p>
+                </div>
+                <span style={{ fontSize: 12, color: colors.profit, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                  +{formatUSD(BigInt(liq.bonus ?? '0'), 18)}
+                </span>
               </div>
-            </div>
-            <span style={{ color: colors.profit, fontWeight: 700, fontSize: 13 }}>
-              +{formatUSD(BigInt(liq.bonus ?? '0'), 18)}
-            </span>
+            ))}
           </div>
-        ))}
-      </section>
-    </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div style={{ color: colors.textMuted, fontSize: 11, marginBottom: 2 }}>{label}</div>
-      <div style={{ color: colors.textPrimary, fontSize: 12, fontWeight: 600 }}>{value}</div>
+        </div>
+      )}
     </div>
   );
 }
