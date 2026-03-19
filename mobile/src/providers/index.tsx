@@ -6,40 +6,40 @@ import { injected } from '@wagmi/core';
 import { PrivyProvider } from '@privy-io/expo';
 
 // ─── Chain definitions ────────────────────────────────────────────────────────
-export const baseSepolia = defineChain({
-  id: 84532,
-  name: 'Base Sepolia',
+export const unichainSepolia = defineChain({
+  id: 1301,
+  name: 'Unichain Sepolia',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://base-sepolia.drpc.org'] },
+    default: { http: ['https://sepolia.unichain.org'] },
   },
   blockExplorers: {
-    default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' },
+    default: { name: 'Uniscan', url: 'https://sepolia.uniscan.xyz' },
   },
   testnet: true,
 });
 
-export const baseMainnet = defineChain({
-  id: 8453,
-  name: 'Base',
+export const unichainMainnet = defineChain({
+  id: 130,
+  name: 'Unichain',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://mainnet.base.org'] },
+    default: { http: ['https://mainnet.unichain.org'] },
   },
   blockExplorers: {
-    default: { name: 'BaseScan', url: 'https://basescan.org' },
+    default: { name: 'Uniscan', url: 'https://uniscan.xyz' },
   },
 });
 
 // ─── Wagmi config ─────────────────────────────────────────────────────────────
 export const wagmiConfig = createConfig({
-  chains: [baseSepolia, baseMainnet],
+  chains: [unichainSepolia, unichainMainnet],
   connectors: [
     injected(), // MetaMask mobile browser
   ],
   transports: {
-    [baseSepolia.id]: http('https://base-sepolia.drpc.org'),
-    [baseMainnet.id]: http('https://mainnet.base.org'),
+    [unichainSepolia.id]: http('https://sepolia.unichain.org'),
+    [unichainMainnet.id]: http('https://mainnet.unichain.org'),
   },
 });
 

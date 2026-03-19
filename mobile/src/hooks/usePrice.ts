@@ -3,7 +3,7 @@ import { priceService } from '../services/priceService';
 
 /**
  * Subscribe to real-time spot price from ThaHtayHook.
- * Updates on every new block (~2s on Base Sepolia).
+ * Updates on every new block (~2s on Unichain Sepolia).
  */
 export function usePrice(): { price: bigint; isLoading: boolean } {
   const [price, setPrice] = useState<bigint>(priceService.getLastPrice());

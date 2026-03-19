@@ -17,12 +17,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// After deployment, set PRICE_KEEPER_ADDRESS in keeper/.env and run keeper.js.
 contract DeployPriceKeeperScript is Script {
     // ── Unichain Sepolia deployed addresses ───────────────────────────────
-    address constant POOL_MANAGER = 0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408;
-    address constant HOOK         = 0x77167B93196Ed109A91BCD0Ec1cfbbee2d2C30c0;
+    address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
+    address constant HOOK         = 0xAB307e812680b93E32BF23126e8a11924ea2B0C0;
 
     // On this deployment, WETH < USDC by address value, so WETH = currency0.
-    address constant WETH = 0x91CaBba8C9C706E38c92be1721eEA49277De643e;
-    address constant USDC = 0x999b01E1f0A37401b4Bc0DE63F16284Ae9296b9E;
+    address constant WETH = 0xAb69B88033A540442D9FD8A64e8Db8302297572d;
+    address constant USDC = 0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4;
 
     // Pool parameters — must match the initialised pool exactly
     uint24 constant FEE          = 3000; // 0.3%

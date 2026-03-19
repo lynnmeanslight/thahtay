@@ -36,7 +36,7 @@ export function formatCompact(value: bigint, decimals: number = 18): string {
 }
 
 export function formatPnl(pnl: bigint): string {
-  const num = Number(pnl) / 1e18;
+  const num = Number(pnl) / 1e6;
   const prefix = pnl >= 0n ? '+' : '';
   return `${prefix}${USD_FORMATTER.format(num)}`;
 }

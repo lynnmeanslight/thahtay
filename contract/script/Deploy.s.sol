@@ -29,11 +29,11 @@ import {HookMiner} from "@uniswap/v4-periphery/src/utils/HookMiner.sol";
 contract DeployScript is Script {
     // Uniswap v4 PoolManager on Unichain Sepolia
     // Update this after official Uniswap v4 Unichain deployment is published.
-    address constant POOL_MANAGER = 0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408;
+    address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
 
     // Unichain Sepolia token addresses (update before deploying)
-    address constant WETH = 0x91CaBba8C9C706E38c92be1721eEA49277De643e;
-    address constant USDC = 0x999b01E1f0A37401b4Bc0DE63F16284Ae9296b9E;
+    address constant WETH = 0xAb69B88033A540442D9FD8A64e8Db8302297572d;
+    address constant USDC = 0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4;
 
     // Pool fee tier: 0.3%
     uint24 constant POOL_FEE = 3000;

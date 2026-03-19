@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
 import { useWalletStore } from '../store/useWalletStore';
 import { fetchTraderHistory } from '../services/graphService';
@@ -9,17 +9,18 @@ import { useCollateral } from '../hooks/useCollateral';
 
 export function PortfolioPage() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const { usdcBalance, ethBalance } = useWalletStore();
 
-  const { data: history = [], isLoading, refetch } = useQuery({
-    queryKey: ['traderHistory', address],
-    queryFn: () => fetchTraderHistory(address!),
+  const { data: history = [], isLoading, refetch, error } = useQuery({
+    queryKey: ['traderHistory', address, chainId],
+    queryFn: () => fetchTraderHistory(address!, chainId),
     enabled: !!address,
     refetchInterval: 30_000,
   });
 
   const totalRealizedPnl = history.reduce(
-    (acc: bigint, t: any) => acc + BigInt(t.pnl ?? '0'),
+    (acc: bigint, t: any) => acc + BigInt(t.type === 'close' ? (t.pnl ?? '0') : '0'),
     0n,
   );
 
@@ -51,6 +52,11 @@ export function PortfolioPage() {
           <button className="btn btn-ghost" onClick={() => void refetch()} style={{ height: 28, fontSize: 11 }}>Refresh</button>
         </div>
         {isLoading && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+        {!!error && (
+          <p style={{ color: colors.loss, fontSize: 12, marginBottom: 8 }}>
+            Could not load trade history right now.
+          </p>
+        )}
         {!isLoading && history.length === 0 && (
           <div className="empty" style={{ paddingTop: 30 }}><p>No trades yet</p></div>
         )}

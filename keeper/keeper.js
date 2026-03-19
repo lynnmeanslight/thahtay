@@ -28,10 +28,9 @@ dotenv.config({ path: join(__dirname, '.env') });
 
 // ── Chain definition ──────────────────────────────────────────────────────────
 
-const CHAIN_ID = Number(process.env.CHAIN_ID ?? 84532);
-const CHAIN_NAME = process.env.CHAIN_NAME ?? 'Base Sepolia';
+const CHAIN_ID = Number(process.env.CHAIN_ID ?? 1301);
+const CHAIN_NAME = process.env.CHAIN_NAME ?? 'Unichain Sepolia';
 const RPC_URL = process.env.RPC_URL
-  ?? process.env.BaseRPC_URL
   ?? 'https://unichain-sepolia.g.alchemy.com/v2/YMzKKvdFJU9ZBB0r2yGuo';
 
 const unichainSepolia = defineChain({

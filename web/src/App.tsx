@@ -23,7 +23,7 @@ const TABS: { id: Tab; label: string }[] = [
 function WalletSync() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const addresses = getAddresses(chainId as 84532 | 8453);
+  const addresses = getAddresses(chainId as 1301 | 130);
   const { setAddress, setChainId, setUsdcBalance, setEthBalance, disconnect } = useWalletStore();
 
   const { data: ethBalance } = useBalance({ address });

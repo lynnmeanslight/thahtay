@@ -72,7 +72,7 @@ export function PositionCard({ position, onClose }: PositionCardProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 16 }}>
           <div className="stat-row">
             <span className="key">Size</span>
-            <span className="val">{formatUSD(BigInt(position.size), 18)}</span>
+            <span className="val">{formatUSD(BigInt(position.size), 6)}</span>
           </div>
           <div className="stat-row">
             <span className="key">Entry price</span>
@@ -90,7 +90,7 @@ export function PositionCard({ position, onClose }: PositionCardProps) {
           </div>
           <div className="stat-row">
             <span className="key">Margin</span>
-            <span className="val">{formatUSD(BigInt(position.margin), 18)}</span>
+            <span className="val">{formatUSD(BigInt(position.margin), 6)}</span>
           </div>
         </div>
 

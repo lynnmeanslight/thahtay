@@ -11,7 +11,7 @@ function bpsToPercent(rate: bigint): number {
 
 export function useFundingRate() {
   const chainId = useChainId();
-  const addresses = getAddresses(chainId as 84532 | 8453);
+  const addresses = getAddresses(chainId as 1301 | 130);
 
   const { data: longIndex } = useReadContract({
     address: addresses.fundingRateManager,
