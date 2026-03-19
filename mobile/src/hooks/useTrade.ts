@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useAccount, useWriteContract } from 'wagmi';
-import { readContract } from '@wagmi/core';
+import { readContract, waitForTransactionReceipt } from '@wagmi/core';
 import { maxUint256 } from 'viem';
 import { useChainId } from 'wagmi';
 import { THAHTAYHOOK_ABI } from '../contracts/abis/ThaHtayHook';
@@ -53,12 +53,15 @@ export function useTrade() {
     if (allowance >= amount) return; // Already approved
 
     // Approve max to avoid repeated approvals
-    await writeContractAsync({
+    const approveTx = await writeContractAsync({
       address: addresses.usdc,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [addresses.thaHtayHook, maxUint256],
     });
+    // Wait for approval to be confirmed before proceeding — otherwise gas
+    // estimation for the next call sees allowance=0 and reverts.
+    await waitForTransactionReceipt(wagmiConfig, { hash: approveTx });
   }, [address, addresses, writeContractAsync]);
 
   const openPosition = useCallback(async (
@@ -73,11 +76,12 @@ export function useTrade() {
     try {
       await ensureApproval(totalUsdcRequired);
       const sizeUsdc = sizeInternal / BigInt(10 ** 12);
+      const leverageInt = BigInt(Math.max(1, Math.min(10, Math.round(leverage))));
       const txHash = await writeContractAsync({
         address: addresses.thaHtayHook,
         abi: THAHTAYHOOK_ABI,
         functionName: 'openPosition',
-        args: [isLong, sizeUsdc, BigInt(leverage), referrer],
+        args: [isLong, sizeUsdc, leverageInt, referrer],
       });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['position', address] });

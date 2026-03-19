@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useAccount, useWriteContract, useChainId, useReadContract } from 'wagmi';
-import { readContract } from '@wagmi/core';
+import { readContract, waitForTransactionReceipt } from '@wagmi/core';
 import { maxUint256 } from 'viem';
 import { THAHTAYHOOK_ABI } from '../contracts/abis/ThaHtayHook';
 import { ERC20_ABI } from '../contracts/abis/index';
@@ -52,12 +52,13 @@ export function useCollateral() {
       }) as bigint;
 
       if (allowance < amount) {
-        await writeContractAsync({
+        const approveTx = await writeContractAsync({
           address: addresses.usdc,
           abi: ERC20_ABI,
           functionName: 'approve',
           args: [addresses.thaHtayHook, maxUint256],
         });
+        await waitForTransactionReceipt(wagmiConfig, { hash: approveTx });
       }
 
       const txHash = await writeContractAsync({
