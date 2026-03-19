@@ -6,7 +6,7 @@ export const ADDRESSES = {
     positionManager:    '0x8d1d1bf157477b95cee7ba54e2df585ecd970019' as `0x${string}`,
     fundingRateManager: '0xc73d840622dc2ea97f7fd981ea4ce8b88617bf29' as `0x${string}`,
     liquidationEngine:  '0x88b11e2a5194f42d26d68f3fe78436b99524922c' as `0x${string}`,
-    usdc:               '0x631fedeca55aa01ad5844e94ecb604caf29bfdb4' as `0x${string}`,
+    usdc:               '0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4' as `0x${string}`,
     poolManager:        '0x00b036b58a818b1bc34d502d3fe730db729e62ac' as `0x${string}`,
   },
   unichainMainnet: {

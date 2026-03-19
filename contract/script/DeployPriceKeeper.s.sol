@@ -42,8 +42,8 @@ contract DeployPriceKeeperScript is Script {
 
         PriceKeeper keeper = new PriceKeeper(
             POOL_MANAGER,
-            WETH,          // currency0
-            USDC,          // currency1
+            USDC,          // currency0
+            WETH,          // currency1
             FEE,
             TICK_SPACING,
             HOOK

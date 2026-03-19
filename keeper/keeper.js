@@ -46,7 +46,7 @@ const unichainSepolia = defineChain({
 
 const PRIVATE_KEY          = process.env.PRIVATE_KEY;             // 0x-prefixed
 const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;    // deployed PriceKeeper
-const HOOK_ADDRESS         = process.env.HOOK_ADDRESS ?? '0xeb5851c6014C5a5F5A062C1331826b0789C3F0C0';
+const HOOK_ADDRESS         = process.env.HOOK_ADDRESS;
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS ?? 60_000); // 1 min default
 // This must match PriceKeeper.THRESHOLD_BPS in sqrtPrice space.
 // THRESHOLD_BPS=13 => sqrt drift 0.13%, which is roughly ~0.26% ETH price drift.
@@ -54,6 +54,7 @@ const SQRT_DRIFT_THRESHOLD = 0.0013;
 
 if (!PRIVATE_KEY)          throw new Error('Missing PRIVATE_KEY in .env');
 if (!PRICE_KEEPER_ADDRESS) throw new Error('Missing PRICE_KEEPER_ADDRESS in .env');
+if (!HOOK_ADDRESS)         throw new Error('Missing HOOK_ADDRESS in .env');
 
 // ── ABIs ──────────────────────────────────────────────────────────────────────
 
@@ -136,27 +137,46 @@ async function runPreflightChecks() {
     );
   }
 
+  let keeperRole;
+  let hasKeeperRole;
+  let hasKeeperContractRole;
   try {
-    const keeperRole = await publicClient.readContract({
+    keeperRole = await publicClient.readContract({
       address: HOOK_ADDRESS,
       abi: HOOK_ABI,
       functionName: 'KEEPER_ROLE',
     });
-    const hasKeeperRole = await publicClient.readContract({
+    hasKeeperRole = await publicClient.readContract({
       address: HOOK_ADDRESS,
       abi: HOOK_ABI,
       functionName: 'hasRole',
       args: [keeperRole, account.address],
     });
 
-    if (!hasKeeperRole) {
-      canPushIndexPrice = false;
-      console.warn('  warn: keeper wallet lacks KEEPER_ROLE on hook; setIndexPrice will be skipped');
-    }
+    hasKeeperContractRole = await publicClient.readContract({
+      address: HOOK_ADDRESS,
+      abi: HOOK_ABI,
+      functionName: 'hasRole',
+      args: [keeperRole, PRICE_KEEPER_ADDRESS],
+    });
   } catch {
     canPushIndexPrice = false;
     canTriggerFunding = false;
+    syncEnabled = false;
     console.warn('  warn: hook does not expose role/introspection methods; keeper-side hook updates disabled');
+    return;
+  }
+
+  if (!hasKeeperRole) {
+    canPushIndexPrice = false;
+    console.warn('  warn: keeper wallet lacks KEEPER_ROLE on hook; setIndexPrice will be skipped');
+  }
+
+  if (!hasKeeperContractRole) {
+    syncEnabled = false;
+    throw new Error(
+      `PriceKeeper contract lacks KEEPER_ROLE on hook; syncPrice swaps will always revert. Grant role with: cast send ${HOOK_ADDRESS} \"grantRole(bytes32,address)\" ${keeperRole} ${PRICE_KEEPER_ADDRESS} --rpc-url ${RPC_URL} --private-key <ADMIN_PRIVATE_KEY>`,
+    );
   }
 }
 
