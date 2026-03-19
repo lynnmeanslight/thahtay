@@ -1,19 +1,19 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { QueryClient } from '@tanstack/react-query';
-import { unichainSepolia, unichainMainnet } from '../contracts/addresses';
+import { baseSepolia, baseMainnet } from '../contracts/addresses';
 
-export { unichainSepolia, unichainMainnet };
+export { baseSepolia, baseMainnet };
 
 export const wagmiConfig = createConfig({
-  chains: [unichainSepolia, unichainMainnet],
+  chains: [baseSepolia, baseMainnet],
   multiInjectedProviderDiscovery: true,
   connectors: [
     injected(),
   ],
   transports: {
-    [unichainSepolia.id]: http(),
-    [unichainMainnet.id]: http(),
+    [baseSepolia.id]: http(),
+    [baseMainnet.id]: http(),
   },
 });
 

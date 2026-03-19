@@ -28,7 +28,7 @@ export function useTrade() {
   const { address } = useAccount();
   const chainId = useChainId();
   const queryClient = useQueryClient();
-  const addresses = getAddresses(chainId as 1301 | 130);
+  const addresses = getAddresses(chainId as 84532 | 8453);
   const { writeContractAsync } = useWriteContract();
   const [status, setStatus] = useState<TxStatus>(DEFAULT_STATUS);
 

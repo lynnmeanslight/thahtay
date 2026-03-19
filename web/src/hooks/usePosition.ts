@@ -40,7 +40,7 @@ export function usePosition(trader: string | undefined): {
       }
 
       // Fallback: direct on-chain position read
-      const addresses = getAddresses(chainId as 1301 | 130);
+      const addresses = getAddresses(chainId as 84532 | 8453);
       const hasOpen = await readContract(wagmiConfig, {
         address: addresses.positionManager,
         abi: POSITION_MANAGER_ABI,

@@ -1,4 +1,4 @@
-import { createPublicClient, webSocket, http, parseAbiItem, formatUnits } from 'viem';
+import { createPublicClient, webSocket, http } from 'viem';
 import { DEFAULT_CHAIN } from '../contracts/addresses';
 import { THAHTAYHOOK_ABI } from '../contracts/abis/ThaHtayHook';
 import { getAddresses } from '../contracts/addresses';
@@ -74,7 +74,7 @@ class PriceService {
 
   private async fetchPrice() {
     try {
-      const addresses = getAddresses(DEFAULT_CHAIN.id as 1301 | 130);
+      const addresses = getAddresses(DEFAULT_CHAIN.id as 84532 | 8453);
       const rawPrice = await this.httpClient.readContract({
         address: addresses.thaHtayHook,
         abi: THAHTAYHOOK_ABI,
