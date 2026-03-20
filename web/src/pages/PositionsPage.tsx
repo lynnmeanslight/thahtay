@@ -6,13 +6,13 @@ import { usePnL } from '../hooks/usePnL';
 import { PositionCard } from '../components/PositionCard';
 import { ShareCardModal } from '../components/ShareCardModal';
 import { colors } from '../theme/colors';
-import { formatPrice, formatPnl, internalToUsdc } from '../utils/formatting';
+import { formatPrice, formatPnl } from '../utils/formatting';
 
 export function PositionsPage() {
   const { address } = useAccount();
   const { position, isLoading, error, refetch } = usePosition(address);
   const { price } = usePrice();
-  const { pnl, netPnl, pnlPercent, isProfit } = usePnL(position, price);
+  const { netPnl, pnlPercent, isProfit } = usePnL(position, price);
   const [showShare, setShowShare] = useState(false);
 
   if (!address) return (
