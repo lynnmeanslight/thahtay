@@ -165,18 +165,23 @@ eas build --platform all
 
 ## Contract Addresses
 
-### Unichain Sepolia Testnet
-
-> Fill in after deployment.
+### Unichain Sepolia (Chain ID: 1301)
 
 | Contract | Address |
 |---|---|
-| ThaHtayHook | `0x...` |
-| PositionManager | `0x...` |
-| FundingRateManager | `0x...` |
-| LiquidationEngine | `0x...` |
-| USDC (mock) | `0x...` |
-| PoolManager (v4) | `0x...` |
+| `ThaHtayHook` | [`0xAB307e812680b93E32BF23126e8a11924ea2B0C0`](https://sepolia.uniscan.xyz/address/0xAB307e812680b93E32BF23126e8a11924ea2B0C0) |
+| `PositionManager` | [`0x8d1D1bf157477B95cee7Ba54E2DF585ecd970019`](https://sepolia.uniscan.xyz/address/0x8d1D1bf157477B95cee7Ba54E2DF585ecd970019) |
+| `FundingRateManager` | [`0xC73D840622Dc2eA97f7fd981Ea4Ce8b88617Bf29`](https://sepolia.uniscan.xyz/address/0xC73D840622Dc2eA97f7fd981Ea4Ce8b88617Bf29) |
+| `LiquidationEngine` | [`0x88b11E2A5194F42D26D68f3Fe78436b99524922c`](https://sepolia.uniscan.xyz/address/0x88b11E2A5194F42D26D68f3Fe78436b99524922c) |
+| `PriceKeeper` | [`0xFCB7d8C8efBC89dcd8E39a721F69933438EF01A3`](https://sepolia.uniscan.xyz/address/0xFCB7d8C8efBC89dcd8E39a721F69933438EF01A3) |
+| `Treasury` | [`0x53A85148F287835CAF6f66E6a8eD27f2c4c0f722`](https://sepolia.uniscan.xyz/address/0x53A85148F287835CAF6f66E6a8eD27f2c4c0f722) |
+| `USDC (mock)` | [`0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4`](https://sepolia.uniscan.xyz/address/0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4) |
+| `WETH (mock)` | [`0xAb69B88033A540442D9FD8A64e8Db8302297572d`](https://sepolia.uniscan.xyz/address/0xAb69B88033A540442D9FD8A64e8Db8302297572d) |
+| `PoolManager (v4)` | [`0x00B036B58a818B1BC34d502D3fE730Db729e62AC`](https://sepolia.uniscan.xyz/address/0x00B036B58a818B1BC34d502D3fE730Db729e62AC) |
+
+Pyth oracle: `0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a`  
+ETH/USD feed ID: `0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace`  
+Hook mining salt: `0x000...7bda`
 
 ---
 
