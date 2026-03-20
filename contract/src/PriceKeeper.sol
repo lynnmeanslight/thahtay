@@ -36,8 +36,8 @@ contract PriceKeeper is IUnlockCallback {
 
     // ─── Constants ────────────────────────────────────────────────────────
 
-    /// @dev Minimum price drift to trigger a sync: 50 bps = 0.5%
-    uint256 public thresholdBps = 50;
+    /// @dev Minimum price drift to trigger a sync: 12 bps ≈ 0.12% sqrtPrice ≈ 0.25% ETH price
+    uint256 public thresholdBps = 12;
     uint256 public maxStepBps = 200; // max 2% sqrt move per sync
     uint256 public minSyncInterval = 10; // seconds
     uint256 public constant BPS_DENOMINATOR = 10_000;

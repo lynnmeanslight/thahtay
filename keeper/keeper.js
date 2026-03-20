@@ -48,11 +48,14 @@ const PRIVATE_KEY          = process.env.PRIVATE_KEY;             // 0x-prefixed
 const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;    // deployed PriceKeeper
 const HOOK_ADDRESS         = process.env.HOOK_ADDRESS;
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS ?? 60_000); // 1 min default
-// Must match PriceKeeper.thresholdBps (default 50) converted to a fraction.
-// 50 bps = 0.50% sqrtPrice drift ≈ 1.0% ETH price drift.
+// Must match PriceKeeper.thresholdBps (default 12) converted to a fraction.
+// 12 bps = 0.12% sqrtPrice drift ≈ 0.25% ETH price drift.
 // Keeper fires only when sqrtDrift >= this value, so the contract never rejects
 // "drift below threshold".
-const SQRT_DRIFT_THRESHOLD = 0.0050;
+// NOTE: deployed contract must have thresholdBps <= 12. Call:
+//   cast send $PRICE_KEEPER_ADDRESS "setSyncConfig(uint256,uint256,uint256)" 12 200 10 \
+//     --rpc-url https://sepolia.unichain.org --private-key $PRIVATE_KEY
+const SQRT_DRIFT_THRESHOLD = 0.00125;
 
 if (!PRIVATE_KEY)          throw new Error('Missing PRIVATE_KEY in .env');
 if (!PRICE_KEEPER_ADDRESS) throw new Error('Missing PRICE_KEEPER_ADDRESS in .env');
