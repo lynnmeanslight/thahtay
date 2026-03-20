@@ -1,8 +1,10 @@
-# ThaHtayHook — Perpetual Futures on Uniswap v4
+# ThaHtay — Perpetual Futures on Uniswap v4
 
-For complete architecture, workflows, and operational guidance, see [PROJECT_DOCS.md](PROJECT_DOCS.md).
+> Built for the Uniswap Hook Incubator / Hookathon · Deployed on **Unichain Sepolia**
 
-A production-grade decentralized perpetual futures protocol built on **Uniswap v4 Hooks** and deployed on **Unichain**.
+ThaHtay is a **decentralized perpetual futures exchange** implemented entirely as a **Uniswap v4 Hook**. Traders take leveraged long/short ETH/USD positions — no centralized orderbook, no separate oracle contract required. A live Uniswap v4 ETH/USDC pool is the price source and liquidity layer simultaneously.
+
+**The core insight:** a v4 Hook can intercept every swap in a pool. ThaHtay exploits this to read a fresh `slot0` mark price on every swap, trigger funding rate updates, and scan liquidation eligibility — all within the swap callback, with zero additional infrastructure on-chain.
 
 ---
 

@@ -146,7 +146,8 @@ function BalCard({ label, value, valueColor, sublabel }: { label: string; value:
 }
 
 function CollateralPanel() {
-  const { collateralBalance, deposit, withdraw, status, resetStatus } = useCollateral();
+  const { collateralBalance, withdrawableBalance, isUnderfunded, deposit, withdraw, status, resetStatus } = useCollateral();
+  const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit');
   const [rawAmount, setRawAmount] = useState('');
 
   const parsedAmount = (() => {
@@ -155,70 +156,95 @@ function CollateralPanel() {
     return BigInt(Math.round(n * 1_000_000));
   })();
 
-  const handleDeposit = async () => {
-    if (!parsedAmount) return;
-    try { await deposit(parsedAmount); setRawAmount(''); } catch { /* surfaced via status */ }
+  const effectiveMax = mode === 'withdraw' ? withdrawableBalance : collateralBalance;
+  const exceedsBalance = mode === 'withdraw' && parsedAmount !== null && parsedAmount > withdrawableBalance;
+
+  const handleAction = async () => {
+    if (!parsedAmount || exceedsBalance) return;
+    try {
+      if (mode === 'deposit') await deposit(parsedAmount);
+      else await withdraw(parsedAmount);
+      setRawAmount('');
+    } catch { /* surfaced via status */ }
   };
 
-  const handleWithdraw = async () => {
-    if (!parsedAmount) return;
-    try { await withdraw(parsedAmount); setRawAmount(''); } catch { /* surfaced via status */ }
+  const handleMax = () => {
+    resetStatus();
+    const max = Number(effectiveMax) / 1_000_000;
+    setRawAmount(max > 0 ? max.toFixed(6) : '');
+  };
+
+  const switchMode = (next: 'deposit' | 'withdraw') => {
+    setMode(next);
+    setRawAmount('');
+    resetStatus();
   };
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
         <div>
           <p className="label">Vault Collateral</p>
           <p style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
             Pre-deposited USDC used as margin for trades
           </p>
         </div>
-        <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: colors.accent }}>
-          {formatUSD(collateralBalance, 6)}
-        </span>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: 11, color: colors.textMuted, marginBottom: 2 }}>Balance</p>
+          <p style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: colors.accent }}>
+            {formatUSD(collateralBalance, 6)}
+          </p>
+          {isUnderfunded && (
+            <p style={{ fontSize: 11, color: colors.loss, marginTop: 2 }}>
+              withdrawable: {formatUSD(withdrawableBalance, 6)}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Flow explanation */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0,
-        marginBottom: 12,
-        marginTop: 10,
-        fontSize: 12,
-        color: colors.textSecondary,
-      }}>
-        {[
-          { label: 'Wallet USDC' },
-          { arrow: true },
-          { label: 'Vault', highlight: true },
-          { arrow: true },
-          { label: 'Open Trade' },
-          { arrow: true },
-          { label: 'Vault', highlight: true },
-          { arrow: true },
-          { label: 'Withdraw' },
-        ].map((step, i) =>
-          'arrow' in step ? (
-            <span key={i} style={{ color: colors.textMuted, margin: '0 4px', fontSize: 13 }}>→</span>
-          ) : (
-            <span key={i} style={{
-              padding: '3px 7px',
-              borderRadius: 5,
-              background: step.highlight ? `${colors.accent}15` : colors.bg,
-              border: `1px solid ${step.highlight ? `${colors.accent}30` : colors.border}`,
-              color: step.highlight ? colors.accent : colors.textSecondary,
-              fontWeight: step.highlight ? 600 : 400,
-              whiteSpace: 'nowrap' as const,
-            }}>
-              {step.label}
-            </span>
-          )
-        )}
+      {/* Underfunded warning */}
+      {isUnderfunded && mode === 'withdraw' && (
+        <div style={{
+          background: `${colors.loss}10`,
+          border: `1px solid ${colors.loss}30`,
+          borderRadius: 8,
+          padding: '8px 12px',
+          marginBottom: 12,
+          fontSize: 13,
+          color: colors.loss,
+          lineHeight: 1.5,
+        }}>
+          ⚠ The vault currently holds less USDC than your balance shows. You can withdraw up to {formatUSD(withdrawableBalance, 6)} right now.
+        </div>
+      )}
+
+      {/* Mode toggle */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {(['deposit', 'withdraw'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => switchMode(m)}
+            style={{
+              flex: 1,
+              height: 36,
+              borderRadius: 8,
+              border: `1px solid ${mode === m ? colors.accent : colors.border}`,
+              background: mode === m ? `${colors.accent}18` : 'transparent',
+              color: mode === m ? colors.accent : colors.textSecondary,
+              fontWeight: mode === m ? 700 : 400,
+              fontSize: 14,
+              cursor: 'pointer',
+              textTransform: 'capitalize' as const,
+            }}
+          >
+            {m}
+          </button>
+        ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Input row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         <div className="input-wrap" style={{ flex: 1 }}>
           <input
             className="input"
@@ -229,19 +255,52 @@ function CollateralPanel() {
             onChange={(e) => { resetStatus(); setRawAmount(e.target.value); }}
             style={{ fontSize: 16, padding: '11px 16px' }}
           />
-          <span style={{ padding: '0 12px 0 0', fontSize: 13, color: 'var(--text-2)' }}>USDC</span>
+          <span style={{ padding: '0 8px 0 0', fontSize: 13, color: 'var(--text-2)' }}>USDC</span>
         </div>
-        <button className="btn btn-accent" onClick={() => void handleDeposit()} disabled={!parsedAmount || status.isLoading} style={{ height: 42 }}>Deposit</button>
-        <button className="btn btn-ghost" onClick={() => void handleWithdraw()} disabled={!parsedAmount || status.isLoading} style={{ height: 42 }}>Withdraw</button>
+        {mode === 'withdraw' && collateralBalance > 0n && (
+          <button
+            onClick={handleMax}
+            style={{
+              height: 42, padding: '0 12px', borderRadius: 8,
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.accent, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap' as const,
+            }}
+          >
+            Max
+          </button>
+        )}
       </div>
-      {/* Contextual hint */}
+
+      {/* Validation warning */}
+      {exceedsBalance && (
+        <p style={{ color: colors.loss, fontSize: 13, marginBottom: 8 }}>
+          Amount exceeds vault balance ({formatUSD(collateralBalance, 6)})
+        </p>
+      )}
+
+      {/* Action button */}
+      <button
+        className={mode === 'deposit' ? 'btn btn-accent' : 'btn btn-danger'}
+        onClick={() => void handleAction()}
+        disabled={!parsedAmount || status.isLoading || exceedsBalance}
+        style={{ width: '100%', height: 44, fontSize: 15 }}
+      >
+        {status.isLoading
+          ? 'Confirming…'
+          : mode === 'deposit'
+          ? 'Deposit USDC'
+          : 'Withdraw USDC'}
+      </button>
+
       <p style={{ fontSize: 12, color: colors.textMuted, marginTop: 8, lineHeight: 1.4 }}>
-        {collateralBalance === 0n
-          ? 'Deposit USDC here to trade without extra wallet approvals on every position. Your wallet USDC also works directly.'
-          : 'Trade profits return here automatically. Withdraw anytime to move USDC back to your wallet.'}
+        {mode === 'deposit'
+          ? 'Deposited USDC is used as margin automatically when you open trades.'
+          : 'Withdraws free collateral back to your wallet. Cannot withdraw margin locked in an open position.'}
       </p>
-      {status.error && <p style={{ color: colors.loss, fontSize: 13, marginTop: 8 }}>{status.error.message.slice(0, 80)}</p>}
-      {status.isSuccess && <p style={{ color: colors.accent, fontSize: 13, marginTop: 8 }}>✓ Confirmed</p>}
+      {status.error && <p style={{ color: colors.loss, fontSize: 13, marginTop: 8 }}>{status.error.message.slice(0, 120)}</p>}
+      {status.isSuccess && <p style={{ color: colors.profit, fontSize: 13, marginTop: 8 }}>✓ Confirmed</p>}
     </div>
   );
 }

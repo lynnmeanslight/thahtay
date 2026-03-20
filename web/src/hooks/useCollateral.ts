@@ -39,6 +39,22 @@ export function useCollateral() {
     query: { enabled: !!address },
   });
 
+  // Read the contract's actual USDC balance — can diverge from collateralBalance
+  // if protocol fees were collected via withdrawFees() or the contract is underfunded.
+  const { data: contractUsdcBalance = 0n } = useReadContract({
+    address: addresses.usdc,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [addresses.thaHtayHook],
+    query: { enabled: !!address },
+  });
+
+  // The effective withdrawable amount is the minimum of what the user is owed
+  // and what the contract can actually pay out.
+  const withdrawableBalance = collateralBalance < contractUsdcBalance
+    ? (collateralBalance as bigint)
+    : (contractUsdcBalance as bigint);
+
   const deposit = useCallback(async (amount: bigint) => {
     if (!address) throw new Error('Wallet not connected');
     setStatus({ ...DEFAULT_STATUS, isLoading: true });
@@ -84,15 +100,18 @@ export function useCollateral() {
 
   const withdraw = useCallback(async (amount: bigint) => {
     if (!address) throw new Error('Wallet not connected');
+    const capped = amount > (withdrawableBalance as bigint) ? (withdrawableBalance as bigint) : amount;
+    if (capped === 0n) throw new Error('Nothing available to withdraw right now');
     setStatus({ ...DEFAULT_STATUS, isLoading: true });
     try {
       const txHash = await writeContractAsync({
         address: addresses.thaHtayHook,
         abi: THAHTAYHOOK_ABI,
         functionName: 'withdrawCollateral',
-        args: [amount],
+        args: [capped],
         chainId: unichainSepolia.id,
       });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['collateralBalance', address] });
       void refetchBalance();
@@ -100,7 +119,9 @@ export function useCollateral() {
       setStatus({ isLoading: false, isSuccess: false, error: e as Error, txHash: undefined });
       throw e;
     }
-  }, [address, addresses, writeContractAsync, queryClient, refetchBalance]);
+  }, [address, addresses, withdrawableBalance, writeContractAsync, queryClient, refetchBalance]);
 
-  return { collateralBalance: collateralBalance as bigint, deposit, withdraw, status, resetStatus };
+  const isUnderfunded = (collateralBalance as bigint) > (contractUsdcBalance as bigint);
+
+  return { collateralBalance: collateralBalance as bigint, withdrawableBalance: withdrawableBalance as bigint, isUnderfunded, deposit, withdraw, status, resetStatus };
 }

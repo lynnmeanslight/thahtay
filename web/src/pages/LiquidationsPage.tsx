@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
 import { fetchAtRiskPositions, fetchLiquidations, type GqlLiquidation } from '../services/graphService';
 import { useTrade } from '../hooks/useTrade';
 import { formatPrice, formatUSD } from '../utils/formatting';
@@ -11,7 +12,12 @@ function short(addr: string) {
 }
 
 export function LiquidationsPage() {
+  const { address } = useAccount();
   const { liquidate, status } = useTrade();
+
+  if (!address) return (
+    <div className="empty"><p>Connect your wallet to view liquidations.</p></div>
+  );
 
   const { data: atRisk = [], isLoading: loadingAtRisk, refetch: refetchAtRisk } = useQuery({
     queryKey: ['atRisk'],

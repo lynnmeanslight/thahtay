@@ -104,8 +104,10 @@ export function useTrade() {
         args: [],
         chainId: unichainSepolia.id,
       });
+      await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['position', address] });
+      queryClient.invalidateQueries({ queryKey: ['collateralBalance', address] });
     } catch (e: unknown) {
       setStatus({ isLoading: false, isSuccess: false, error: e as Error, txHash: undefined });
       throw e;

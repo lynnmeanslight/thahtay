@@ -77,17 +77,17 @@ export interface GqlProtocolStat {
 }
 
 export async function fetchPosition(trader: string): Promise<GqlPosition | null> {
-  const data = await gql<{ position: GqlPosition | null }>(
-    `query Position($id: ID!) {
-      position(id: $id) {
+  const data = await gql<{ positions: GqlPosition[] }>(
+    `query Position($trader: Bytes!) {
+      positions(where: { trader: $trader, status: "open" }, first: 1) {
         id trader isLong size margin entryPrice leverage
         liquidationPrice status openedAt closedAt
         realizedPnl exitPrice fundingPaid referrer
       }
     }`,
-    { id: trader.toLowerCase() },
+    { trader: trader.toLowerCase() },
   );
-  return data.position;
+  return data.positions[0] ?? null;
 }
 
 export async function fetchTraderHistory(trader: string, chainId: number = 1301): Promise<GqlTrade[]> {

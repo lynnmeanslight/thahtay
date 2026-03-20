@@ -31,7 +31,9 @@ export function usePosition(trader: string | undefined): {
       // Primary: subgraph (fast historical/indexed reads)
       try {
         const indexed = await fetchPosition(address);
-        if (indexed) return indexed;
+        // Only use subgraph result if position is still open; closed entities fall
+        // through to the authoritative on-chain read below.
+        if (indexed && indexed.status === 'open') return indexed;
       } catch {
         // Fallback below keeps the page usable when subgraph URL/indexing is broken.
       }
