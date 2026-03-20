@@ -1480,6 +1480,25 @@
   },
   {
     "type": "event",
+    "name": "IndexPriceUpdated",
+    "inputs": [
+      {
+        "name": "indexPrice",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "FundingUpdated",
     "inputs": [
       {

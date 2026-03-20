@@ -22,6 +22,7 @@ dataSources:
         - FundingUpdate
         - MarginEvent
         - ProtocolStat
+        - PriceSnapshot
       abis:
         - name: ThaHtayHook
           file: ./abis/ThaHtayHook.json
@@ -36,6 +37,8 @@ dataSources:
           handler: handleMarginRemoved
         - event: Liquidated(indexed address,indexed address,uint256,uint256)
           handler: handleLiquidated
+        - event: IndexPriceUpdated(uint256,uint256)
+          handler: handleIndexPriceUpdated
         - event: FundingUpdated(int256,uint256,uint256)
           handler: handleFundingUpdated
       file: ./src/mapping.ts

@@ -5,6 +5,7 @@ import {
   MarginRemoved,
   Liquidated,
   FundingUpdated,
+  IndexPriceUpdated,
 } from "../generated/ThaHtayHook/ThaHtayHook";
 import {
   Position,
@@ -13,6 +14,7 @@ import {
   FundingUpdate,
   MarginEvent,
   ProtocolStat,
+  PriceSnapshot,
 } from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 
@@ -182,6 +184,15 @@ export function handleLiquidated(event: Liquidated): void {
   stat.totalLiquidations = stat.totalLiquidations.plus(BigInt.fromI32(1));
   stat.updatedAt = event.block.timestamp;
   stat.save();
+}
+
+export function handleIndexPriceUpdated(event: IndexPriceUpdated): void {
+  let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let snapshot = new PriceSnapshot(id);
+  snapshot.price = event.params.indexPrice;
+  snapshot.timestamp = event.block.timestamp;
+  snapshot.blockNumber = event.block.number;
+  snapshot.save();
 }
 
 export function handleFundingUpdated(event: FundingUpdated): void {

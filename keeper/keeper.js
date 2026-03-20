@@ -314,7 +314,7 @@ async function tick() {
         : targetSqrtPriceX96 - currentSqrtPriceX96)) / Number(currentSqrtPriceX96)
       : 0;
 
-    const approxPriceThreshold = SQRT_DRIFT_THRESHOLD * 2; // ~1.0% price drift
+    const approxPriceThreshold = SQRT_DRIFT_THRESHOLD * 2; // ~0.25% price drift
     console.log(
       `[${timestamp}] real=$${realPrice.toFixed(2)}  pool=$${poolPrice.toFixed(2)}  priceDrift=${(priceDrift * 100).toFixed(2)}%  sqrtDrift=${(sqrtDrift * 100).toFixed(2)}%`,
     );

@@ -45,7 +45,8 @@ export function TradePage() {
     }
   };
 
-  const fmtRate = (rate: number) => `${rate >= 0 ? '+' : ''}${rate.toFixed(4)}%`;
+  const fmtRate = (rate: number) =>
+    rate === 0 ? '—' : `${rate >= 0 ? '+' : ''}${rate.toFixed(2)}% / yr`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

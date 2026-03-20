@@ -54,6 +54,20 @@ export const THAHTAYHOOK_ABI = [
   },
   {
     type: 'function',
+    name: 'indexPrice',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'indexPriceUpdatedAt',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
     name: 'getUnrealizedPnl',
     stateMutability: 'view',
     inputs: [{ name: 'trader', type: 'address' }],
@@ -122,6 +136,14 @@ export const THAHTAYHOOK_ABI = [
       { name: 'liquidator',        type: 'address', indexed: true  },
       { name: 'liquidationPrice',  type: 'uint256', indexed: false },
       { name: 'bonus',             type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'IndexPriceUpdated',
+    inputs: [
+      { name: 'indexPrice', type: 'uint256', indexed: false },
+      { name: 'timestamp',  type: 'uint256', indexed: false },
     ],
   },
   {

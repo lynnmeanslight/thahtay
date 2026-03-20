@@ -43,6 +43,13 @@ type Liquidation @entity {
   txHash: Bytes!
 }
 
+type PriceSnapshot @entity {
+  id: ID!                        # txHash-logIndex
+  price: BigInt!                 # indexPrice (inverted sqrtPrice, 1e18 scaled)
+  timestamp: BigInt!             # block timestamp
+  blockNumber: BigInt!
+}
+
 type FundingUpdate @entity {
   id: ID!                        # epoch number
   fundingRate: BigInt!           # signed, 1e18 scaled

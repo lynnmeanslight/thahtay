@@ -287,3 +287,27 @@ export async function fetchProtocolStats(): Promise<GqlProtocolStat> {
     totalLiquidations: '0',
   };
 }
+
+export interface GqlPriceSnapshot {
+  price: string;
+  timestamp: string;
+}
+
+export async function fetchPriceHistory(limit = 200): Promise<GqlPriceSnapshot[]> {
+  try {
+    const data = await gql<{ priceSnapshots: GqlPriceSnapshot[] }>(
+      `query PriceHistory($first: Int!) {
+        priceSnapshots(
+          first: $first
+          orderBy: timestamp
+          orderDirection: desc
+        ) { price timestamp }
+      }`,
+      { first: limit },
+    );
+    // Return oldest-first so chart renders left-to-right
+    return (data.priceSnapshots ?? []).reverse();
+  } catch {
+    return [];
+  }
+}
