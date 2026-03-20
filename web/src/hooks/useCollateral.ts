@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
-import { useAccount, useWriteContract, useChainId, useReadContract } from 'wagmi';
-import { readContract, waitForTransactionReceipt } from '@wagmi/core';
+import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { readContract, waitForTransactionReceipt, getTransactionCount } from '@wagmi/core';
 import { maxUint256 } from 'viem';
 import { THAHTAYHOOK_ABI } from '../contracts/abis/ThaHtayHook';
 import { ERC20_ABI } from '../contracts/abis/index';
-import { getAddresses } from '../contracts/addresses';
+import { ADDRESSES, unichainSepolia } from '../contracts/addresses';
 import { useQueryClient } from '@tanstack/react-query';
 import { wagmiConfig } from '../providers/config';
 
@@ -24,9 +24,8 @@ const DEFAULT_STATUS: TxStatus = {
 
 export function useCollateral() {
   const { address } = useAccount();
-  const chainId = useChainId();
   const queryClient = useQueryClient();
-  const addresses = getAddresses(chainId as 1301 | 130);
+  const addresses = ADDRESSES.unichainSepolia;
   const { writeContractAsync } = useWriteContract();
   const [status, setStatus] = useState<TxStatus>(DEFAULT_STATUS);
 
@@ -51,14 +50,19 @@ export function useCollateral() {
         args: [address, addresses.thaHtayHook],
       }) as bigint;
 
+      let nonce: number | undefined;
       if (allowance < amount) {
         const approveTx = await writeContractAsync({
           address: addresses.usdc,
           abi: ERC20_ABI,
           functionName: 'approve',
           args: [addresses.thaHtayHook, maxUint256],
+          chainId: unichainSepolia.id,
         });
         await waitForTransactionReceipt(wagmiConfig, { hash: approveTx });
+        // After the approval confirms, MetaMask's nonce cache may be stale.
+        // Fetch the current pending nonce so depositCollateral gets the right one.
+        nonce = await getTransactionCount(wagmiConfig, { address: address!, blockTag: 'pending' });
       }
 
       const txHash = await writeContractAsync({
@@ -66,6 +70,8 @@ export function useCollateral() {
         abi: THAHTAYHOOK_ABI,
         functionName: 'depositCollateral',
         args: [amount],
+        chainId: unichainSepolia.id,
+        ...(nonce !== undefined ? { nonce } : {}),
       });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['collateralBalance', address] });
@@ -85,6 +91,7 @@ export function useCollateral() {
         abi: THAHTAYHOOK_ABI,
         functionName: 'withdrawCollateral',
         args: [amount],
+        chainId: unichainSepolia.id,
       });
       setStatus({ isLoading: false, isSuccess: true, error: null, txHash });
       queryClient.invalidateQueries({ queryKey: ['collateralBalance', address] });

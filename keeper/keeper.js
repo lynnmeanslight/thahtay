@@ -48,9 +48,11 @@ const PRIVATE_KEY          = process.env.PRIVATE_KEY;             // 0x-prefixed
 const PRICE_KEEPER_ADDRESS = process.env.PRICE_KEEPER_ADDRESS;    // deployed PriceKeeper
 const HOOK_ADDRESS         = process.env.HOOK_ADDRESS;
 const POLL_INTERVAL_MS     = Number(process.env.POLL_INTERVAL_MS ?? 60_000); // 1 min default
-// This must match PriceKeeper.THRESHOLD_BPS in sqrtPrice space.
-// THRESHOLD_BPS=13 => sqrt drift 0.13%, which is roughly ~0.26% ETH price drift.
-const SQRT_DRIFT_THRESHOLD = 0.0013;
+// Must match PriceKeeper.thresholdBps (default 50) converted to a fraction.
+// 50 bps = 0.50% sqrtPrice drift ≈ 1.0% ETH price drift.
+// Keeper fires only when sqrtDrift >= this value, so the contract never rejects
+// "drift below threshold".
+const SQRT_DRIFT_THRESHOLD = 0.0050;
 
 if (!PRIVATE_KEY)          throw new Error('Missing PRIVATE_KEY in .env');
 if (!PRICE_KEEPER_ADDRESS) throw new Error('Missing PRICE_KEEPER_ADDRESS in .env');
@@ -309,7 +311,7 @@ async function tick() {
         : targetSqrtPriceX96 - currentSqrtPriceX96)) / Number(currentSqrtPriceX96)
       : 0;
 
-    const approxPriceThreshold = SQRT_DRIFT_THRESHOLD * 2;
+    const approxPriceThreshold = SQRT_DRIFT_THRESHOLD * 2; // ~1.0% price drift
     console.log(
       `[${timestamp}] real=$${realPrice.toFixed(2)}  pool=$${poolPrice.toFixed(2)}  priceDrift=${(priceDrift * 100).toFixed(2)}%  sqrtDrift=${(sqrtDrift * 100).toFixed(2)}%`,
     );

@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { readContract } from '@wagmi/core';
-import { useChainId } from 'wagmi';
 import { fetchPosition } from '../services/graphService';
 import type { GqlPosition } from '../services/graphService';
 import { wagmiConfig } from '../providers/config';
 import { POSITION_MANAGER_ABI } from '../contracts/abis';
-import { getAddresses } from '../contracts/addresses';
+import { ADDRESSES } from '../contracts/addresses';
 
 type OnChainPosition = {
   trader: `0x${string}`;
@@ -24,10 +23,8 @@ export function usePosition(trader: string | undefined): {
   error: Error | null;
   refetch: () => void;
 } {
-  const chainId = useChainId();
-
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['position', trader, chainId],
+    queryKey: ['position', trader],
     queryFn: async () => {
       const address = trader! as `0x${string}`;
 
@@ -40,7 +37,7 @@ export function usePosition(trader: string | undefined): {
       }
 
       // Fallback: direct on-chain position read
-      const addresses = getAddresses(chainId as 1301 | 130);
+      const addresses = ADDRESSES.unichainSepolia;
       const hasOpen = await readContract(wagmiConfig, {
         address: addresses.positionManager,
         abi: POSITION_MANAGER_ABI,

@@ -4,12 +4,12 @@
 export const ADDRESSES = {
   // Unichain Sepolia (chainId: 1301)
   unichainSepolia: {
-    thaHtayHook:        '0xab307e812680b93e32bf23126e8a11924ea2b0c0' as `0x${string}`,
-    positionManager:    '0x8d1d1bf157477b95cee7ba54e2df585ecd970019' as `0x${string}`,
-    fundingRateManager: '0xc73d840622dc2ea97f7fd981ea4ce8b88617bf29' as `0x${string}`,
-    liquidationEngine:  '0x88b11e2a5194f42d26d68f3fe78436b99524922c' as `0x${string}`,
+    thaHtayHook:        '0xAB307e812680b93E32BF23126e8a11924ea2B0C0' as `0x${string}`,
+    positionManager:    '0x8d1D1bf157477B95cee7Ba54E2DF585ecd970019' as `0x${string}`,
+    fundingRateManager: '0xC73D840622Dc2eA97f7fd981Ea4Ce8b88617Bf29' as `0x${string}`,
+    liquidationEngine:  '0x88b11E2A5194F42D26D68f3Fe78436b99524922c' as `0x${string}`,
     usdc:               '0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4' as `0x${string}`,
-    poolManager:        '0x00b036b58a818b1bc34d502d3fe730db729e62ac' as `0x${string}`,
+    poolManager:        '0x00B036B58a818B1BC34d502D3fE730Db729e62AC' as `0x${string}`,
   },
   // Unichain Mainnet (chainId: 130)
   unichainMainnet: {

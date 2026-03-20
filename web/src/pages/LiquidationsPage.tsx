@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchAtRiskPositions, fetchLiquidations, type GqlLiquidation } from '../services/graphService';
 import { useTrade } from '../hooks/useTrade';
 import { formatPrice, formatUSD } from '../utils/formatting';
+import { calcLiquidationPrice } from '../utils/pnl';
 import { colors } from '../theme/colors';
 
 function short(addr: string) {
@@ -84,7 +85,11 @@ export function LiquidationsPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                   <div className="stat-row" style={{ fontSize: 12 }}>
                     <span className="key">Size</span>
-                    <span className="val">{formatUSD(BigInt(pos.size ?? '0'), 18)}</span>
+                    <span className="val">{formatUSD(BigInt(pos.size ?? '0'), 6)}</span>
+                  </div>
+                  <div className="stat-row" style={{ fontSize: 12 }}>
+                    <span className="key">Margin</span>
+                    <span className="val">{formatUSD(BigInt(pos.margin ?? '0'), 6)}</span>
                   </div>
                   <div className="stat-row" style={{ fontSize: 12 }}>
                     <span className="key">Entry</span>
@@ -93,7 +98,12 @@ export function LiquidationsPage() {
                   <div className="stat-row" style={{ fontSize: 12 }}>
                     <span className="key">Liq. price</span>
                     <span className="val" style={{ color: colors.loss }}>
-                      ${formatPrice(BigInt(pos.liquidationPrice ?? '0'))}
+                      ${formatPrice(calcLiquidationPrice(
+                        pos.isLong,
+                        BigInt(pos.size ?? '0'),
+                        BigInt(pos.margin ?? '0'),
+                        BigInt(pos.entryPrice ?? '0'),
+                      ))}
                     </span>
                   </div>
                 </div>

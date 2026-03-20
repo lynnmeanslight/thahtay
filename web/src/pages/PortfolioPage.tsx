@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
 import { useWalletStore } from '../store/useWalletStore';
 import { fetchTraderHistory } from '../services/graphService';
@@ -9,12 +9,11 @@ import { useCollateral } from '../hooks/useCollateral';
 
 export function PortfolioPage() {
   const { address } = useAccount();
-  const chainId = useChainId();
   const { usdcBalance, ethBalance } = useWalletStore();
 
   const { data: history = [], isLoading, refetch, error } = useQuery({
-    queryKey: ['traderHistory', address, chainId],
-    queryFn: () => fetchTraderHistory(address!, chainId),
+    queryKey: ['traderHistory', address],
+    queryFn: () => fetchTraderHistory(address!),  
     enabled: !!address,
     refetchInterval: 30_000,
   });

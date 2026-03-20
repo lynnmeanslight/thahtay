@@ -1,10 +1,14 @@
 === ThaHtayHook Deployment Summary ===
-  Network:             Unichain Sepolia
-  ThaHtayHook:         0xeb5851c6014C5a5F5A062C1331826b0789C3F0C0
-  PositionManager:     0x2071faEe2ee61fb5a295BF03a1D51f26D2F9FaBD
-  FundingRateManager:  0x723Bb79a7951415563129eE3583e573432aD6Fda
-  LiquidationEngine:   0x4503A9d28Dc625676e327184Ea76c654Dd657419
-  Treasury:            0x3766C6dDF41a590bB68FB925594Dc8b24663C765
-  USDC:                0x31d0220469e10c4E71834a79b1f276d740d3768F
+  Chain ID:            1301 (Unichain Sepolia)
+  ThaHtayHook:         0xAB307e812680b93E32BF23126e8a11924ea2B0C0
+  PositionManager:     0x8d1D1bf157477B95cee7Ba54E2DF585ecd970019
+  FundingRateManager:  0xC73D840622Dc2eA97f7fd981Ea4Ce8b88617Bf29
+  LiquidationEngine:   0x88b11E2A5194F42D26D68f3Fe78436b99524922c
+  Treasury:            0x53A85148F287835CAF6f66E6a8eD27f2c4c0f722
+  WETH:                0xAb69B88033A540442D9FD8A64e8Db8302297572d
+  USDC:                0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4
   PoolManager:         0x00B036B58a818B1BC34d502D3fE730Db729e62AC
+  PriceKeeper:         0xAC2A098a5EF4A1d2dCc67f2eF0e73b91eba4C2Fc
+  Pyth Oracle:         0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
+  Pyth ETH/USD Feed:   0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
   =======================================

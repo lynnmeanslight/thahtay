@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useReadContract, useChainId } from 'wagmi';
+import { useReadContract } from 'wagmi';
 import { FUNDING_RATE_MANAGER_ABI } from '../contracts/abis/index';
-import { getAddresses } from '../contracts/addresses';
+import { ADDRESSES } from '../contracts/addresses';
 
 const PRECISION = BigInt('1000000000000000000'); // 1e18
 
@@ -10,8 +10,7 @@ function bpsToPercent(rate: bigint): number {
 }
 
 export function useFundingRate() {
-  const chainId = useChainId();
-  const addresses = getAddresses(chainId as 1301 | 130);
+  const addresses = ADDRESSES.unichainSepolia;
 
   const { data: longIndex } = useReadContract({
     address: addresses.fundingRateManager,

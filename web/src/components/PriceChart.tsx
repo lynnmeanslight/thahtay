@@ -30,7 +30,12 @@ export const PriceChart = memo(function PriceChart({ currentPrice }: PriceChartP
     lastPrice.current = currentPrice;
     const priceNum = 1e18 / Number(currentPrice);
     setData((prev) => {
-      const next = [...prev, { t: Date.now(), price: priceNum }];
+      const entry = { t: Date.now(), price: priceNum };
+      // Seed two points on first receipt so the chart renders immediately
+      // (no pool swaps on a quiet testnet means price never changes again)
+      const next = prev.length === 0
+        ? [{ t: entry.t - 1000, price: priceNum }, entry]
+        : [...prev, entry];
       return next.length > MAX_POINTS ? next.slice(next.length - MAX_POINTS) : next;
     });
   }, [currentPrice]);

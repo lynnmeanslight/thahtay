@@ -90,16 +90,17 @@ library PositionLib {
     }
 
     /// @notice Calculate the liquidation price for a position
-    /// @dev For long:  liqPrice = entryPrice * (1 - (margin/size - maintenanceMargin%))
-    ///      For short: liqPrice = entryPrice * (1 + (margin/size - maintenanceMargin%))
+    /// @dev Prices are stored as inverted WETH-per-USDC × 1e18 (i.e. 1/ETH_USD).
+    ///      For long:  liquidated when ETH price DROPS  → inverted price RISES
+    ///                 liqPrice = entryPrice * (1 + buffer)  → higher inv = lower USD ✓
+    ///      For short: liquidated when ETH price RISES  → inverted price FALLS
+    ///                 liqPrice = entryPrice * (1 - buffer)  → lower inv = higher USD ✓
     function liquidationPrice(Position memory pos) internal pure returns (uint256 liqPrice) {
         if (pos.size == 0) return 0;
 
         // maintenanceMarginRatio = 5% = 0.05
         // marginRatioAtOpen = margin / size
         // buffer = marginRatioAtOpen - maintenanceMarginRatio
-        // For long:  liqPrice = entryPrice * (1 - buffer)
-        // For short: liqPrice = entryPrice * (1 + buffer)
 
         uint256 maintenancePrecision = (MAINTENANCE_MARGIN_BPS * PRECISION) / BPS_DENOMINATOR; // 5e16
         uint256 marginRatioAtOpen = (pos.margin * PRECISION) / pos.size;
@@ -110,14 +111,16 @@ library PositionLib {
                 return pos.entryPrice;
             }
             uint256 buffer = marginRatioAtOpen - maintenancePrecision;
-            liqPrice = pos.entryPrice - (pos.entryPrice * buffer) / PRECISION;
+            // Inverted price must RISE to trigger liq (ETH price falls)
+            liqPrice = pos.entryPrice + (pos.entryPrice * buffer) / PRECISION;
         } else {
             uint256 buffer = marginRatioAtOpen + maintenancePrecision;
-            // Cap at 2x entry to avoid overflow
+            // Cap to avoid underflow
             if (buffer >= PRECISION) {
-                return type(uint256).max;
+                return 0;
             }
-            liqPrice = pos.entryPrice + (pos.entryPrice * buffer) / PRECISION;
+            // Inverted price must FALL to trigger liq (ETH price rises)
+            liqPrice = pos.entryPrice - (pos.entryPrice * buffer) / PRECISION;
         }
     }
 
