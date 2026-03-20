@@ -39,8 +39,8 @@ export function LiquidationsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Liquidations</h2>
-        <p style={{ fontSize: 12, color: 'var(--text-2)' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Liquidations</h2>
+        <p style={{ fontSize: 14, color: 'var(--text-2)' }}>
           Earn a 5% bonus by liquidating under-margined positions.
         </p>
       </div>
@@ -49,10 +49,10 @@ export function LiquidationsPage() {
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <p className="label">At risk ({atRisk.length})</p>
-          <button className="btn btn-ghost" onClick={() => void refetchAtRisk()} style={{ height: 28, fontSize: 11 }}>Refresh</button>
+          <button className="btn btn-ghost" onClick={() => void refetchAtRisk()} style={{ height: 36, fontSize: 13 }}>Refresh</button>
         </div>
 
-        {loadingAtRisk && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+{loadingAtRisk && <p style={{ color: 'var(--text-2)', fontSize: 15 }}>Loading…</p>}
 
         {!loadingAtRisk && atRisk.length === 0 && (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 16px', textAlign: 'center', color: 'var(--text-2)', fontSize: 12 }}>
@@ -70,32 +70,32 @@ export function LiquidationsPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{short(pos.trader)}</p>
-                    <p style={{ fontSize: 10, marginTop: 2, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' as const, color: pos.isLong ? colors.profit : colors.loss }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{short(pos.trader)}</p>
+                    <p style={{ fontSize: 12, marginTop: 2, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' as const, color: pos.isLong ? colors.profit : colors.loss }}>
                       {pos.isLong ? 'Long' : 'Short'} · {pos.leverage}×
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 10, color: 'var(--text-2)' }}>Margin ratio</p>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: colors.loss, fontVariantNumeric: 'tabular-nums' }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-2)' }}>Margin ratio</p>
+                    <p style={{ fontSize: 17, fontWeight: 700, color: colors.loss, fontVariantNumeric: 'tabular-nums' }}>
                       {marginRatio.toFixed(1)}%
                     </p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                  <div className="stat-row" style={{ fontSize: 12 }}>
+                  <div className="stat-row" style={{ fontSize: 14 }}>
                     <span className="key">Size</span>
                     <span className="val">{formatUSD(BigInt(pos.size ?? '0'), 6)}</span>
                   </div>
-                  <div className="stat-row" style={{ fontSize: 12 }}>
+                  <div className="stat-row" style={{ fontSize: 14 }}>
                     <span className="key">Margin</span>
                     <span className="val">{formatUSD(BigInt(pos.margin ?? '0'), 6)}</span>
                   </div>
-                  <div className="stat-row" style={{ fontSize: 12 }}>
+                  <div className="stat-row" style={{ fontSize: 14 }}>
                     <span className="key">Entry</span>
                     <span className="val">${formatPrice(BigInt(pos.entryPrice ?? '0'))}</span>
                   </div>
-                  <div className="stat-row" style={{ fontSize: 12 }}>
+                  <div className="stat-row" style={{ fontSize: 14 }}>
                     <span className="key">Liq. price</span>
                     <span className="val" style={{ color: colors.loss }}>
                       ${formatPrice(calcLiquidationPrice(
@@ -124,7 +124,7 @@ export function LiquidationsPage() {
       {(recent.length > 0 || loadingRecent) && (
         <div>
           <p className="label" style={{ marginBottom: 10 }}>Recent</p>
-          {loadingRecent && <p style={{ color: 'var(--text-2)', fontSize: 13 }}>Loading…</p>}
+          {loadingRecent && <p style={{ color: 'var(--text-2)', fontSize: 15 }}>Loading…</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {recent.slice(0, 10).map((liq: any, i: number) => (
               <div
@@ -132,12 +132,12 @@ export function LiquidationsPage() {
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8 }}
               >
                 <div>
-                  <p style={{ fontSize: 12, color: 'var(--text)' }}>{short(liq.trader)}</p>
-                  <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>
+                  <p style={{ fontSize: 14, color: 'var(--text)' }}>{short(liq.trader)}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
                     {new Date(Number(liq.timestamp) * 1000).toLocaleDateString()}
                   </p>
                 </div>
-                <span style={{ fontSize: 12, color: colors.profit, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 14, color: colors.profit, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                   +{formatUSD(BigInt(liq.bonus ?? '0'), 18)}
                 </span>
               </div>

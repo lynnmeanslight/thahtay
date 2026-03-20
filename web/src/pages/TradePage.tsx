@@ -45,27 +45,83 @@ export function TradePage() {
     }
   };
 
-  const fmtRate = (rate: number) =>
-    rate === 0 ? '—' : `${rate >= 0 ? '+' : ''}${rate.toFixed(2)}% / yr`;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <PriceChart currentPrice={price} />
 
-      {/* Funding rates */}
-      <div style={{ display: 'flex', gap: 16, padding: '0 2px' }}>
-        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>
-          Long{' '}
-          <span style={{ color: longRate >= 0 ? colors.profit : colors.loss, fontWeight: 600 }}>
-            {fmtRate(longRate)}
-          </span>
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>
-          Short{' '}
-          <span style={{ color: shortRate >= 0 ? colors.profit : colors.loss, fontWeight: 600 }}>
-            {fmtRate(shortRate)}
-          </span>
-        </span>
+      {/* Funding Rate Strip */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '8px 12px',
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 8,
+      }}>
+        {/* Label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 15, color: colors.textSecondary }}>⟳</span>
+          <span style={{ fontSize: 13, color: colors.textSecondary, fontWeight: 500 }}>Funding</span>
+          <span style={{
+            fontSize: 11,
+            color: colors.textMuted,
+            background: colors.bg,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 3,
+            padding: '1px 4px',
+            letterSpacing: '0.3px',
+            fontWeight: 600,
+          }}>/ yr</span>
+        </div>
+
+        {/* Long / Short pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {[
+            { label: 'long',  rate: longRate },
+            { label: 'short', rate: shortRate },
+          ].map(({ label, rate }) => {
+            const isSelected = side === label;
+            // Paying = bad: long pays when rate > 0, short pays when rate < 0
+            const isPaying = (label === 'long' && rate > 0) || (label === 'short' && rate < 0);
+            const rateColor = rate === 0
+              ? colors.textSecondary
+              : isPaying ? colors.loss : colors.profit;
+            const sideColor = label === 'long' ? colors.profit : colors.loss;
+            return (
+              <div key={label} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 9px',
+                borderRadius: 6,
+                background: isSelected ? `${sideColor}12` : 'transparent',
+                border: `1px solid ${isSelected ? `${sideColor}30` : 'transparent'}`,
+                transition: 'all 0.15s',
+              }}>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isSelected ? sideColor : colors.textSecondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  {label === 'long' ? '↑' : '↓'} {label}
+                </span>
+                <span style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: rateColor,
+                  fontVariantNumeric: 'tabular-nums',
+                  minWidth: 42,
+                  textAlign: 'right',
+                }}>
+                  {rate === 0 ? '—' : `${rate > 0 ? '+' : ''}${rate.toFixed(2)}%`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Trade form */}
@@ -147,7 +203,7 @@ export function TradePage() {
             background: 'var(--bg)',
             border: '1px solid var(--border)',
             color: 'var(--text-2)',
-            fontSize: 12,
+            fontSize: 14,
             textAlign: 'center',
           }}>
             Close your active position before opening a new one
@@ -158,12 +214,12 @@ export function TradePage() {
             disabled={status.isLoading}
             style={{
               width: '100%',
-              height: 50,
+              height: 56,
               border: `1px solid ${isLong ? `${colors.profit}40` : `${colors.loss}40`}`,
               borderRadius: 10,
               background: isLong ? `${colors.profit}18` : `${colors.loss}18`,
               color: isLong ? colors.profit : colors.loss,
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 700,
               cursor: status.isLoading ? 'not-allowed' : 'pointer',
               opacity: status.isLoading ? 0.5 : 1,
@@ -182,11 +238,12 @@ export function TradePage() {
         )}
 
         {status.isSuccess && status.txHash && (
-          <p style={{ textAlign: 'center', fontSize: 11, color: colors.profit, marginTop: -8 }}>
+          <p style={{ textAlign: 'center', fontSize: 13, color: colors.profit, marginTop: -8 }}>
             ✓ Position opened
           </p>
         )}
       </div>
+
     </div>
   );
 }

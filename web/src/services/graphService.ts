@@ -133,9 +133,9 @@ async function blockTimestampMap(client: PublicClient, blocks: bigint[]): Promis
   return new Map(entries);
 }
 
-async function fetchTraderHistoryFromChain(trader: string, chainId: number): Promise<GqlTrade[]> {
+async function fetchTraderHistoryFromChain(trader: string, _chainId: number): Promise<GqlTrade[]> {
   const checksumTrader = trader as Address;
-  const safeChainId = chainId === 130 ? 130 : 1301;
+  const safeChainId = 1301 as const;
   const addresses = getAddresses(safeChainId);
   const client = getPublicClient(wagmiConfig, { chainId: safeChainId });
 

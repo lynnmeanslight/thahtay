@@ -34,7 +34,7 @@ function NetworkGuard() {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(10,10,10,0.92)',
+      background: 'rgba(7,7,15,0.92)',
       backdropFilter: 'blur(6px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
@@ -50,10 +50,10 @@ function NetworkGuard() {
       }}>
         <div style={{ fontSize: 32 }}>⛓️</div>
         <div>
-          <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--text)', marginBottom: 6 }}>
+          <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)', marginBottom: 6 }}>
             Wrong Network
           </p>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.5 }}>
             ThaHtay runs on <strong style={{ color: 'var(--accent)' }}>Unichain Sepolia</strong>.
             Please switch your wallet network to continue.
           </p>
@@ -62,7 +62,7 @@ function NetworkGuard() {
           className="btn-accent"
           disabled={isPending}
           onClick={() => switchChain({ chainId: unichainSepolia.id })}
-          style={{ width: '100%', padding: '12px 0', fontSize: 14 }}
+          style={{ width: '100%', padding: '14px 0', fontSize: 16 }}
         >
           {isPending ? 'Switching…' : 'Switch to Unichain Sepolia'}
         </button>
@@ -111,8 +111,8 @@ function BalancePill() {
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: 6,
-      fontSize: 11,
+      gap: 8,
+      fontSize: 13,
       fontVariantNumeric: 'tabular-nums',
     }}>
       <span style={{
@@ -148,14 +148,19 @@ function AppInner() {
       <WalletSync />
 
       <header className="nav">
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px', color: 'var(--text)' }}>
-            thahtay
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src="/brand_logo.png"
+            alt="ThaHtay"
+            style={{ height: 32, objectFit: 'contain', filter: 'brightness(1.6) saturate(1.1)' }}
+          />
+          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.4px', color: 'var(--text)' }}>
+            ThaHtay
           </span>
           <span style={{
-            background: 'rgba(0,212,161,0.1)',
+            background: 'rgba(126,108,242,0.15)',
             color: 'var(--accent)',
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: 700,
             padding: '2px 6px',
             borderRadius: 4,
