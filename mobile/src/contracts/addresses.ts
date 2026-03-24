@@ -10,6 +10,7 @@ export const ADDRESSES = {
     liquidationEngine:  '0x88b11E2A5194F42D26D68f3Fe78436b99524922c' as `0x${string}`,
     usdc:               '0x631FEDecA55Aa01aD5844E94ecB604caF29bfdb4' as `0x${string}`,
     poolManager:        '0x00B036B58a818B1BC34d502D3fE730Db729e62AC' as `0x${string}`,
+    usdcFaucet:         '0xD676F5c666BEeccB66576D5C7eF011f08213170c' as `0x${string}`,
   },
   // Unichain Mainnet (chainId: 130)
   unichainMainnet: {
@@ -19,6 +20,7 @@ export const ADDRESSES = {
     liquidationEngine:  '0x0000000000000000000000000000000000000000' as `0x${string}`,
     usdc:               '0x0000000000000000000000000000000000000000' as `0x${string}`,
     poolManager:        '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    usdcFaucet:         '0x0000000000000000000000000000000000000000' as `0x${string}`,
   },
 } as const;
 

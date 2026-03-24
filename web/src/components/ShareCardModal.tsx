@@ -51,7 +51,7 @@ export function ShareCardModal({ onClose, ...cardProps }: ShareCardModalProps) {
     const sideLabel = cardProps.side === 'long' ? '↑ Long' : '↓ Short';
     const pnlSign   = cardProps.pnlPercent >= 0 ? '+' : '';
     const text = [
-      `${sideLabel} ETH ${cardProps.leverage}× on @ThaHtay`,
+      `${sideLabel} ETH ${cardProps.leverage}× on https://thahtay.vercel.app/`,
       `Entry: $${cardProps.entryPrice}  →  Mark: $${cardProps.currentPrice}`,
       `PnL: ${cardProps.pnlFormatted} (${pnlSign}${cardProps.pnlPercent.toFixed(2)}%)`,
       '',

@@ -7,18 +7,20 @@ import { TradePage } from './pages/TradePage';
 import { PositionsPage } from './pages/PositionsPage';
 import { LiquidationsPage } from './pages/LiquidationsPage';
 import { PortfolioPage } from './pages/PortfolioPage';
+import { FaucetPage } from './pages/FaucetPage';
 import { useWalletStore } from './store/useWalletStore';
 import { ADDRESSES, unichainSepolia } from './contracts/addresses';
 import { ERC20_ABI } from './contracts/abis/index';
 import { useReadContract } from 'wagmi';
 
-type Tab = 'trade' | 'positions' | 'liquidations' | 'portfolio';
+type Tab = 'trade' | 'positions' | 'liquidations' | 'portfolio' | 'faucet';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'trade',        label: 'Trade' },
   { id: 'positions',    label: 'Positions' },
   { id: 'liquidations', label: 'Liquidate' },
   { id: 'portfolio',    label: 'Portfolio' },
+  { id: 'faucet',       label: '🎁 Faucet' },
 ];
 
 function NetworkGuard() {
@@ -191,6 +193,7 @@ function AppInner() {
         {activeTab === 'positions'    && <PositionsPage />}
         {activeTab === 'liquidations' && <LiquidationsPage />}
         {activeTab === 'portfolio'    && <PortfolioPage />}
+        {activeTab === 'faucet'       && <FaucetPage />}
       </main>
     </div>
   );
