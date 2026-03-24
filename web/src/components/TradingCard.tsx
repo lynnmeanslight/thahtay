@@ -13,8 +13,8 @@ export interface TradingCardProps {
 export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
   ({ side, leverage, entryPrice, currentPrice, pnlFormatted, pnlPercent, isProfit }, ref) => {
     const isLong = side === 'long';
-    const sideColor  = isLong  ? '#4ade80' : '#f87171';
-    const pnlColor   = isProfit ? '#4ade80' : '#f87171';
+    const sideColor  = isLong  ? 'var(--profit)' : 'var(--loss)';
+    const pnlColor   = isProfit ? 'var(--profit)' : 'var(--loss)';
     const pnlSign    = pnlPercent >= 0 ? '+' : '';
 
     return (
@@ -22,14 +22,17 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
         ref={ref}
         style={{
           width: 360,
-          background: 'linear-gradient(145deg, #0a0a1a 0%, #110d28 100%)',
-          border: '1px solid #1c1c3a',
+          background: 'var(--surface)',
+          backdropFilter: 'blur(20px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+          border: '1px solid var(--border)',
           borderRadius: 20,
           padding: '28px 28px 22px',
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontFamily: 'inherit',
           position: 'relative',
           overflow: 'hidden',
           boxSizing: 'border-box',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
         }}
       >
         {/* Background glow */}
@@ -40,7 +43,7 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
           width: 220,
           height: 220,
           borderRadius: '50%',
-          background: `${sideColor}18`,
+          background: isLong ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
           filter: 'blur(50px)',
           pointerEvents: 'none',
         }} />
@@ -51,7 +54,7 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
           width: 160,
           height: 160,
           borderRadius: '50%',
-          background: '#7e6cf218',
+          background: 'var(--accent-glow)',
           filter: 'blur(40px)',
           pointerEvents: 'none',
         }} />
@@ -66,20 +69,21 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <img src="/brand_logo.png" alt="ThaHtay" style={{ height: 22, objectFit: 'contain' }} />
-            <span style={{ color: '#c8c0f0', fontWeight: 800, fontSize: 15, letterSpacing: '-0.4px' }}>ThaHtay</span>
-            <span style={{ color: '#3a3a5a', fontSize: 13 }}>·</span>
-            <span style={{ color: '#9090c0', fontSize: 13, fontWeight: 500 }}>ETH / USD</span>
+            <span style={{ color: 'var(--text)', fontWeight: 800, fontSize: 16, letterSpacing: '-0.3px', textShadow: '0 0 10px rgba(255,255,255,0.2)' }}>ThaHtay</span>
+            <span style={{ color: 'var(--text-3)', fontSize: 13 }}>·</span>
+            <span style={{ color: 'var(--text-2)', fontSize: 14, fontWeight: 500 }}>ETH / USD</span>
           </div>
           <span style={{
             fontSize: 10,
-            color: '#7e6cf2',
-            background: '#1c1c38',
-            border: '1px solid #2c2c50',
+            color: 'var(--accent)',
+            background: 'var(--border)',
+            border: '1px solid var(--border-hi)',
             borderRadius: 6,
             padding: '3px 9px',
-            fontWeight: 600,
-            letterSpacing: '0.3px',
+            fontWeight: 700,
+            letterSpacing: '0.5px',
             textTransform: 'uppercase',
+            boxShadow: '0 0 10px rgba(0,255,209,0.1)'
           }}>Unichain</span>
         </div>
 
@@ -92,10 +96,11 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
           position: 'relative',
         }}>
           <div style={{
-            background: `${sideColor}1a`,
-            border: `1px solid ${sideColor}50`,
+            background: isLong ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            border: `1px solid ${isLong ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
             borderRadius: 10,
             padding: '6px 14px',
+            boxShadow: `0 0 15px ${isLong ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}`
           }}>
             <span style={{
               color: sideColor,
@@ -108,12 +113,12 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
             </span>
           </div>
           <div style={{
-            background: '#1c1c38',
-            border: '1px solid #2c2c4e',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--border-hi)',
             borderRadius: 10,
             padding: '6px 14px',
           }}>
-            <span style={{ color: '#c8c0f0', fontWeight: 700, fontSize: 13 }}>
+            <span style={{ color: 'var(--text)', fontWeight: 700, fontSize: 13 }}>
               {leverage}×
             </span>
           </div>
@@ -132,6 +137,7 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
             letterSpacing: '-1.5px',
             fontVariantNumeric: 'tabular-nums',
             lineHeight: 1,
+            textShadow: `0 0 25px ${isProfit ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
           }}>
             {pnlFormatted}
           </div>
@@ -140,7 +146,7 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
             fontWeight: 600,
             fontSize: 18,
             marginTop: 8,
-            opacity: 0.75,
+            opacity: 0.9,
             fontVariantNumeric: 'tabular-nums',
           }}>
             {pnlSign}{pnlPercent.toFixed(2)}%
@@ -161,20 +167,20 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
               flex: 1,
               paddingRight: i === 0 ? 20 : 0,
               paddingLeft:  i === 1 ? 20 : 0,
-              borderLeft:   i === 1 ? '1px solid #1c1c38' : 'none',
+              borderLeft:   i === 1 ? '1px solid var(--border)' : 'none',
             }}>
               <div style={{
-                color: '#6060a0',
+                color: 'var(--text-3)',
                 fontSize: 10,
                 fontWeight: 600,
                 textTransform: 'uppercase',
-                letterSpacing: '0.6px',
+                letterSpacing: '0.8px',
                 marginBottom: 5,
               }}>
                 {label}
               </div>
               <div style={{
-                color: '#e8e0ff',
+                color: 'var(--text)',
                 fontWeight: 700,
                 fontSize: 17,
                 fontVariantNumeric: 'tabular-nums',
@@ -188,11 +194,11 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
 
         {/* Footer */}
         <div style={{
-          borderTop: '1px solid #1c1c38',
+          borderTop: '1px solid var(--border)',
           paddingTop: 14,
           display: 'flex',
           flexDirection: 'column',
-          gap: 10,
+          gap: 12,
           position: 'relative',
         }}>
           {/* Hashtag tags */}
@@ -201,20 +207,20 @@ export const TradingCard = forwardRef<HTMLDivElement, TradingCardProps>(
               <span key={tag} style={{
                 fontSize: 10,
                 fontWeight: 700,
-                color: '#7e6cf2',
-                background: 'rgba(126,108,242,0.12)',
-                border: '1px solid rgba(126,108,242,0.25)',
+                color: 'var(--accent)',
+                background: 'rgba(0, 255, 209, 0.08)',
+                border: '1px solid rgba(0, 255, 209, 0.15)',
                 borderRadius: 5,
-                padding: '2px 7px',
-                letterSpacing: '0.2px',
+                padding: '3px 8px',
+                letterSpacing: '0.4px',
               }}>{tag}</span>
             ))}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#3a3a60', fontSize: 11, fontWeight: 500 }}>
+            <span style={{ color: 'var(--text-3)', fontSize: 11, fontWeight: 500 }}>
               Perpetuals on Uniswap v4
             </span>
-            <span style={{ color: '#7e6cf2', fontSize: 11, fontWeight: 700, letterSpacing: '-0.2px' }}>
+            <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, letterSpacing: '0.5px' }}>
               thahtay.xyz
             </span>
           </div>
